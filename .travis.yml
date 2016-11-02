@@ -1,5 +1,9 @@
 language: python
 
+branches:
+  only:
+    - master
+
 python:
   - "2.7"
   - "3.5"
@@ -13,4 +17,5 @@ script:
   - python setup.py nosetests
 
 after_success:
-  coveralls
+  – coveralls
+  - bash <(curl -s https://codecov.io/bash)
