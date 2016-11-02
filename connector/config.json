@@ -1,0 +1,10 @@
+{
+    "diskspace_resource": "DISKSPACE",
+    "users_resource": "USERS",
+    "devices_resource": "DEVICES",
+    "base_uri": "fallball_api_uri",
+    "application_token": "fallball_application_token",
+    "oauth": {
+        "client_key": "client_secret"
+    }
+}
