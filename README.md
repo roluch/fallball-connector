@@ -1,7 +1,8 @@
 Fallball connector
 =====
 [![Build Status](https://travis-ci.org/odin-public/fallball-connector.svg?branch=master)](https://travis-ci.org/odin-public/fallball-connector)
-[![Coverage Status](https://coveralls.io/repos/github/odin-public/fallball-connector/badge.svg)](https://coveralls.io/github/odin-public/fallball-connector)
+[![Coverage Status](https://coveralls.io/repos/github/odin-public/fallball-connector/badge.svg?branch=master)](https://coveralls.io/github/odin-public/fallball-connector?branch=master)
+
 
 This is a basic sample connector for the FallBall cloud storage service.
 
