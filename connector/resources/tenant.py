@@ -24,9 +24,7 @@ class TenantList(Resource):
                             required=True,
                             help='Missing aps.id in request')
         parser.add_argument(config.diskspace_resource, dest='storage_limit',
-                            type=parameter_validator('limit'), required=True,
-                            help='Missing limit for {} in request'.format(
-                                config.diskspace_resource))
+                            type=parameter_validator('limit'), required=False)
         parser.add_argument('oaSubscription', dest='sub_id', type=parameter_validator('aps', 'id'),
                             required=True,
                             help='Missing link to subscription in request')
@@ -39,7 +37,8 @@ class TenantList(Resource):
         sub_id = OA.get_resource(args.sub_id)['subscriptionId']
         company_name = '{}-sub{}'.format(company_name if company_name else 'Unnamed', sub_id)
         g.company_name = company_name
-        client = Client(g.reseller, name=company_name, storage={'limit': args.storage_limit})
+        storage_limit = args.storage_limit if args.storage_limit else 0
+        client = Client(g.reseller, name=company_name, storage={'limit': storage_limit})
         client.create()
         return {'tenantId': client.name}, 201
 
@@ -64,13 +63,14 @@ class Tenant(Resource):
     def put(self, tenant_id):
         parser = reqparse.RequestParser()
         parser.add_argument(config.diskspace_resource, dest='storage_limit',
-                            type=parameter_validator('limit'), required=True,
+                            type=parameter_validator('limit'), required=False,
                             help='Missing {} limit in request'.format(config.diskspace_resource))
         args = parser.parse_args()
         company_name = g.company_name = get_name_for_tenant(tenant_id)
-        client = Client(g.reseller, name=company_name,
-                        storage={'limit': args.storage_limit})
-        client.update()
+        if args.storage_limit:
+            client = Client(g.reseller, name=company_name,
+                            storage={'limit': args.storage_limit})
+            client.update()
         return {}
 
     def delete(self, tenant_id):

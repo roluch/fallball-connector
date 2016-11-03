@@ -7,6 +7,9 @@ from connector.resources.tenant import get_name_for_tenant
 from . import OA, parameter_validator
 
 
+DEFAULT_STORAGE_LIMIT = 10
+
+
 class UserList(Resource):
     def post(self):
         parser = reqparse.RequestParser()
@@ -27,9 +30,14 @@ class UserList(Resource):
 
         client = Client(g.reseller, name=company_name)
 
+        # There should not be failures if diskspace resource is removed but users are still enabled.
+        # Set 0 limit for clients and all users in this scenario.
+        client.refresh()
+        limit = 0 if client.storage.limit == 0 else DEFAULT_STORAGE_LIMIT
+
         oa_user = OA.get_resource(args.user_id)
-        user = FbUser(client, email=oa_user['email'], password='password',
-                      admin=oa_user['isAccountAdmin'], storage={'limit': 10})
+        user = FbUser(client, email=oa_user['email'], admin=oa_user['isAccountAdmin'],
+                      storage={'limit': limit})
         user.create()
 
         return {'userId': user.email}, 201
