@@ -24,6 +24,9 @@ class TestTenant(TestCase):
                                       config.diskspace_resource: {'limit': 1000},
                                       'oaSubscription': {'aps': {'id': 555}},
                                       'oaAccount': {'aps': {'id': 555}}})
+        self.diskless_tenant = json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123'},
+                                           'oaSubscription': {'aps': {'id': 555}},
+                                           'oaAccount': {'aps': {'id': 555}}})
 
         return app
 
@@ -36,6 +39,18 @@ class TestTenant(TestCase):
             fake_oa.get_resource.side_effect = [{'companyName': 'fake_company'},
                                                 {'subscriptionId': 555}]
             res = self.client.post('/tenant', headers=self.headers, data=self.new_tenant)
+            instance.create.assert_called()
+        assert res.status_code == 201
+
+    @bypass_auth
+    def test_new_tenant_no_diskspace(self):
+        with patch('connector.resources.tenant.Client') as fake_client, \
+                patch('connector.resources.tenant.OA') as fake_oa:
+            instance = fake_client.return_value
+            instance.name = 'fake_company_name'
+            fake_oa.get_resource.side_effect = [{'companyName': 'fake_company'},
+                                                {'subscriptionId': 555}]
+            res = self.client.post('/tenant', headers=self.headers, data=self.diskless_tenant)
             instance.create.assert_called()
         assert res.status_code == 201
 

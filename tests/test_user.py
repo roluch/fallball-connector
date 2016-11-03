@@ -34,15 +34,18 @@ class TestUser(TestCase):
     def test_new_user(self):
         with patch('connector.resources.user.OA') as fake_oa, \
                 patch('connector.resources.user.FbUser') as fake_user, \
+                patch('connector.resources.user.Client') as fake_client, \
                 patch('connector.resources.user.get_name_for_tenant') as fake_name:
-            instance = fake_user.return_value
+            user_instance = fake_user.return_value
+            client_instance = fake_client.return_value
             fake_name.return_value = 'fake_client'
-            instance.email = 'user@odin.com'
+            user_instance.email = 'user@odin.com'
+            client_instance.storage.limit = 100
             fake_oa.get_resources.return_value = [self.new_tenant]
             fake_oa.get_resource.return_value = self.oa_user
             res = self.client.post('/user', headers=self.headers,
                                    data=json.dumps(self.user_service))
-            instance.create.assert_called()
+            user_instance.create.assert_called()
             assert res.status_code == 201
 
     @bypass_auth
