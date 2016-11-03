@@ -25,6 +25,8 @@ class TenantList(Resource):
                             help='Missing aps.id in request')
         parser.add_argument(config.diskspace_resource, dest='storage_limit',
                             type=parameter_validator('limit'), required=False)
+        parser.add_argument(config.users_resource, dest='users_limit',
+                            type=parameter_validator('limit'), required=False)
         parser.add_argument('oaSubscription', dest='sub_id', type=parameter_validator('aps', 'id'),
                             required=True,
                             help='Missing link to subscription in request')
@@ -32,13 +34,18 @@ class TenantList(Resource):
                             required=True,
                             help='Missing link to account in request')
         args = parser.parse_args()
+
+        user_integration_enabled = bool(args.users_limit)
+
         company_name = OA.get_resource(args.acc_id)['companyName']
         company_name = urlify(company_name)
         sub_id = OA.get_resource(args.sub_id)['subscriptionId']
         company_name = '{}-sub{}'.format(company_name if company_name else 'Unnamed', sub_id)
         g.company_name = company_name
         storage_limit = args.storage_limit if args.storage_limit else 0
-        client = Client(g.reseller, name=company_name, storage={'limit': storage_limit})
+
+        client = Client(g.reseller, name=company_name, is_integrated=user_integration_enabled,
+                        storage={'limit': storage_limit})
         client.create()
         return {'tenantId': client.name}, 201
 
