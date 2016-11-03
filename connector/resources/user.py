@@ -34,7 +34,7 @@ class UserList(Resource):
         # There should not be failures if diskspace resource is removed but users are still enabled.
         # Set 0 limit for clients and all users in this scenario.
         client.refresh()
-        limit = 0 if client.storage.limit == 0 else config.default_user_limit
+        limit = 0 if client.storage['limit'] == 0 else config.default_user_limit
 
         oa_user = OA.get_resource(args.user_id)
         user = FbUser(client, email=oa_user['email'], admin=oa_user['isAccountAdmin'],

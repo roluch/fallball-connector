@@ -7,6 +7,7 @@ class ClientSchema(Schema):
     name = fields.Str()
     users_amount = fields.Int(load_only=True)
     storage = fields.Nested(StorageSchema)
+    is_integrated = fields.Bool()
 
     @post_load
     def make_client(self, data):
@@ -20,12 +21,15 @@ class ClientSchema(Schema):
 class Client(object):
     name = None
     users_amount = None
+    is_integrated = True
     storage = None
     reseller = None
 
-    def __init__(self, reseller=None, name=None, users_amount=None, storage=None):
+    def __init__(self, reseller=None, name=None, is_integrated=True, users_amount=None,
+                 storage=None):
         self.reseller = reseller
         self.name = name
+        self.is_integrated = is_integrated
         self.users_amount = users_amount
         self.storage = storage
 
@@ -53,7 +57,8 @@ class Client(object):
         api = self.api()
         result = api.clients(self.name).get()
         c = ClientSchema().load(result).data
-        self.__init__(self.reseller, name=c.name, users_amount=c.users_amount, storage=c.storage)
+        self.__init__(self.reseller, name=c.name, is_integrated=c.is_integrated,
+                      users_amount=c.users_amount, storage=c.storage)
 
     def delete(self):
         api = self.api()

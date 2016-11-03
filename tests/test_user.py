@@ -40,7 +40,7 @@ class TestUser(TestCase):
             client_instance = fake_client.return_value
             fake_name.return_value = 'fake_client'
             user_instance.email = 'user@odin.com'
-            client_instance.storage.limit = 100
+            client_instance.storage = {'limit': 100}
             fake_oa.get_resources.return_value = [self.new_tenant]
             fake_oa.get_resource.return_value = self.oa_user
             res = self.client.post('/user', headers=self.headers,
