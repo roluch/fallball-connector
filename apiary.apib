@@ -1,0 +1,150 @@
+FORMAT: 1A
+HOST: https://private-b77a0-fallballconnector.apiary-mock.com
+
+# FallBall Connector
+
+FallBall Connector implements the APS Lite connector API for FallBall sample application
+
+
+
+## Top level [/]
+
+### Health Check [GET /]
+
++ Response 200 (application/json)
+
+        {
+            "status": "ok"
+        }
+
+
+## Application [/app]
+
+###  Parnter creates new application instance [POST /app]
+
++ Response 200 (application/json)
+
+        {
+        }
+
+
+###  Partner deinstall application [DELETE /app/{id}]
+
++ Response 200 (application/json)
+
+        {
+        }
+        
+###  Partner upgrades application [POST /app/{id}/upgrade]
+
++ Response 200 (application/json)
+
+        {
+        }
+
+### Application subscriptions populated [POST /app/{app}/tenants]
+
++ Response 200 (application/json)
+
+        {
+        }
+
+### Subscription removed from application collection [DELETE /app/{app}/tenants/{id}]
+
++ Response 200 (application/json)
+
+        {
+        }
+ 
+
+## Tenant [/tenant]
+
+Resources related to subscription API
+
+### Create a new subscription [POST /tenant]
+
++ Response 200 (application/json)
+
+        {
+        }
+   
+    
+### Get application resource usage [GET /tenant/{id}]
+
++ Response 200 (application/json)
+
+        {
+        }
+    
+
+### Update application resource limits [PUT /tenant/{id}]
+
++ Response 200 (application/json)
+
+        {
+        }
+
+### Delete subscription [DELETE /tenant/{id}]
+
++ Response 200 (application/json)
+
+        {
+        }
+
+### Suspend subscription [PUT /tenant/{id}/disable]
+
++ Response 200 (application/json)
+
+        {
+        }
+
+### Resume subscription [PUT /tenant/{id}/enable]
+
++ Response 200 (application/json)
+
+        {
+        }
+
+### Login to application [GET /tenant/{id}/adminlogin]
+
++ Response 200 (text/plain)
+    
+        http://www.odin.com
+
+### New user notification [POST /tenant/{id}/users]
+
++ Response 200 (application/json)
+
+        {
+        }
+
+### User removed notification [DELETE /tenant/{id}/users/{user_id}]
+
++ Response 200 (application/json)
+
+        {
+        }
+
+
+
+## User [/user]
+
+###  Create new user [POST /user]
+
++ Response 200 (application/json)
+
+        {
+        }
+
+###  Remove user [DELETE /user/{id}]
+
++ Response 200 (application/json)
+
+        {
+        }
+
+### Log user in [GET /user/{id}/login]
+
++ Response 200 (text/plain)
+    
+        http://www.odin.com
