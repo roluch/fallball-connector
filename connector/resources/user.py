@@ -15,6 +15,12 @@ def get_limit(user_type):
         else config.default_user_limit
 
 
+user_types = {
+    config.users_resource: 'default',
+    config.gold_users_resource: 'gold'
+}
+
+
 class UserList(Resource):
     def post(self):
         parser = reqparse.RequestParser()
@@ -43,7 +49,8 @@ class UserList(Resource):
 
         oa_user = OA.get_resource(args.user_id)
         user = FbUser(client, email=oa_user['email'], admin=oa_user['isAccountAdmin'],
-                      storage={'limit': limit})
+                      storage={'limit': limit},
+                      profile_type=user_types.get(args.user_type, 'default'))
         user.create()
 
         return {'userId': user.email}, 201
@@ -67,6 +74,8 @@ class User(Resource):
         client.refresh()
         g.company_name = client.name
         user.storage['limit'] = 0 if client.storage['limit'] == 0 else get_limit(args.user_type)
+        if args.user_type in user_types:
+            user.profile_type = user_types.get(args.user_type)
         user.update()
         return {}, 200
 
