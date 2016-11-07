@@ -1,8 +1,10 @@
 {
     "diskspace_resource": "DISKSPACE",
     "users_resource": "USERS",
+    "gold_users_resource": "GOLD_USERS",
     "devices_resource": "DEVICES",
     "default_user_limit": 10,
+    "gold_user_limit": 15,
     "base_uri": "fallball_api_uri",
     "application_token": "fallball_application_token",
     "oauth": {

@@ -7,8 +7,12 @@ from connector.fbclient.client import Client
 from connector.resources.tenant import get_name_for_tenant
 from . import OA, parameter_validator
 
-
 config = Config()
+
+
+def get_limit(user_type):
+    return config.gold_user_limit if user_type == config.gold_users_resource \
+        else config.default_user_limit
 
 
 class UserList(Resource):
@@ -25,6 +29,7 @@ class UserList(Resource):
                             type=parameter_validator('aps', 'id'),
                             required=True,
                             help='Missing aps.id in request')
+        parser.add_argument('resource', dest='user_type', type=str, required=False)
         args = parser.parse_args()
 
         company_name = g.company_name = get_name_for_tenant(args.tenant_id)
@@ -34,7 +39,7 @@ class UserList(Resource):
         # There should not be failures if diskspace resource is removed but users are still enabled.
         # Set 0 limit for clients and all users in this scenario.
         client.refresh()
-        limit = 0 if client.storage['limit'] == 0 else config.default_user_limit
+        limit = 0 if client.storage['limit'] == 0 else get_limit(args.user_type)
 
         oa_user = OA.get_resource(args.user_id)
         user = FbUser(client, email=oa_user['email'], admin=oa_user['isAccountAdmin'],
@@ -53,8 +58,16 @@ class User(Resource):
         return {}, 204
 
     def put(self, user_id):
-        client = make_fallball_user(user_id).client
+        parser = reqparse.RequestParser()
+        parser.add_argument('resource', dest='user_type', type=str, required=False)
+        args = parser.parse_args()
+        user = make_fallball_user(user_id)
+        user.refresh()
+        client = user.client
+        client.refresh()
         g.company_name = client.name
+        user.storage['limit'] = 0 if client.storage['limit'] == 0 else get_limit(args.user_type)
+        user.update()
         return {}, 200
 
 
