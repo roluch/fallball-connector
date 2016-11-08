@@ -26,7 +26,8 @@ class User(object):
     storage = None
     profile_type = None
 
-    def __init__(self, client=None, email=None, password=None, admin=None, storage=None, profile_type=None):
+    def __init__(self, client=None, email=None, password=None, admin=None, storage=None,
+                 profile_type=None):
         self.client = client
         self.email = email
         self.password = password

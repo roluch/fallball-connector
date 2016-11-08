@@ -59,7 +59,10 @@ class Tenant(Resource):
         client.refresh()
         return {
             config.users_resource: {
-                'usage': client.users_amount
+                'usage': client.users_by_type['default']
+            },
+            config.gold_users_resource: {
+                'usage': client.users_by_type['gold']
             },
             config.diskspace_resource: {
                 'usage': client.storage['usage']

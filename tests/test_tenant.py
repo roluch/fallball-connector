@@ -60,12 +60,16 @@ class TestTenant(TestCase):
                 patch('connector.resources.tenant.get_name_for_tenant') as fake_name:
             instance = fake_client.return_value
             fake_name.return_value = 'fake_client'
-            instance.users_amount = 1
+            instance.users_by_type = {
+                'default': 1,
+                'gold': 2
+            }
             instance.storage = {'usage': 1}
             res = self.client.get('/tenant/123', headers=self.headers)
             data = res.json
             assert data[config.diskspace_resource]['usage'] == 1
             assert data[config.users_resource]['usage'] == 1
+            assert data[config.gold_users_resource]['usage'] == 2
             assert res.status_code == 200
 
     @bypass_auth

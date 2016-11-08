@@ -67,7 +67,7 @@ class TestUser(TestCase):
         with patch('connector.resources.user.make_fallball_user') as fake_user:
             instance = fake_user.return_value
             instance.client.name = 'fake_client'
-            res = self.client.put('/user/123', headers=self.headers)
+            res = self.client.put('/user/123', headers=self.headers, data='{}')
             assert res.status_code == 200
 
     @bypass_auth

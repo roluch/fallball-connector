@@ -28,7 +28,7 @@ class Config(object):
             config = json.load(c)
             Config.default_user_limit = config.get('default_user_limit', 10)
             Config.gold_user_limit = config.get('gold_user_limit', 15)
-            Config.gold_users_resource = config.get('gold_users_resource')
+            Config.gold_users_resource = config.get('gold_users_resource', 'GOLD_USERS')
             try:
                 Config.diskspace_resource = config['diskspace_resource']
                 Config.users_resource = config['users_resource']
