@@ -3,9 +3,15 @@ from marshmallow import Schema, fields, post_load, pre_dump
 from connector.fbclient import StorageSchema
 
 
+class UsersByTypeSchema(Schema):
+    default = fields.Int(load_only=True)
+    gold = fields.Int(load_only=True)
+
+
 class ClientSchema(Schema):
     name = fields.Str()
     users_amount = fields.Int(load_only=True)
+    users_by_type = fields.Nested(UsersByTypeSchema)
     storage = fields.Nested(StorageSchema)
     is_integrated = fields.Bool()
 
@@ -24,14 +30,16 @@ class Client(object):
     is_integrated = True
     storage = None
     reseller = None
+    users_by_type = None
 
     def __init__(self, reseller=None, name=None, is_integrated=True, users_amount=None,
-                 storage=None):
+                 storage=None, users_by_type=None):
         self.reseller = reseller
         self.name = name
         self.is_integrated = is_integrated
         self.users_amount = users_amount
         self.storage = storage
+        self.users_by_type = users_by_type
 
     def api(self):
         return self.reseller.api().resellers(self.reseller.name)
@@ -58,7 +66,7 @@ class Client(object):
         result = api.clients(self.name).get()
         c = ClientSchema().load(result).data
         self.__init__(self.reseller, name=c.name, is_integrated=c.is_integrated,
-                      users_amount=c.users_amount, storage=c.storage)
+                      users_amount=c.users_amount, storage=c.storage, users_by_type=c.users_by_type)
 
     def delete(self):
         api = self.api()

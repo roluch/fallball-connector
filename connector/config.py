@@ -6,9 +6,11 @@ class Config(object):
     default_path = os.path.join(os.path.dirname(__file__), 'config.json')
     conf_file = os.environ.get('CONFIG_PATH', default_path)
     diskspace_resource = None
-    default_user_limit = 10
+    default_user_limit = None
+    gold_user_limit = None
     devices_resource = None
     users_resource = None
+    gold_users_resource = None
     base_uri = None
     application_token = None
     oauth = None
@@ -24,8 +26,9 @@ class Config(object):
 
         with open(Config.conf_file, 'r') as c:
             config = json.load(c)
-            if 'default_user_limit' in config:
-                Config.default_user_limit = int(config['default_user_limit'])
+            Config.default_user_limit = config.get('default_user_limit', 10)
+            Config.gold_user_limit = config.get('gold_user_limit', 15)
+            Config.gold_users_resource = config.get('gold_users_resource', 'GOLD_USERS')
             try:
                 Config.diskspace_resource = config['diskspace_resource']
                 Config.users_resource = config['users_resource']
