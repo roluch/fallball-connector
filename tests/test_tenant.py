@@ -69,7 +69,6 @@ class TestTenant(TestCase):
             data = res.json
             assert data[config.diskspace_resource]['usage'] == 1
             assert data[config.users_resource]['usage'] == 1
-            assert data[config.gold_users_resource]['usage'] == 2
             assert res.status_code == 200
 
     @bypass_auth
