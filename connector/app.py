@@ -18,7 +18,7 @@ from connector.validator import check_oauth_signature, get_client_key
 from connector.resources import urlify
 
 app = Flask(__name__)
-api = Api(app)
+api = Api(app, prefix='/v1')
 
 fake = Faker()
 

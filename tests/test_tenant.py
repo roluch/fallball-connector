@@ -38,7 +38,7 @@ class TestTenant(TestCase):
             instance.name = 'fake_company_name'
             fake_oa.get_resource.side_effect = [{'companyName': 'fake_company'},
                                                 {'subscriptionId': 555}]
-            res = self.client.post('/tenant', headers=self.headers, data=self.new_tenant)
+            res = self.client.post('/v1/tenant', headers=self.headers, data=self.new_tenant)
             instance.create.assert_called()
         assert res.status_code == 201
 
@@ -50,7 +50,7 @@ class TestTenant(TestCase):
             instance.name = 'fake_company_name'
             fake_oa.get_resource.side_effect = [{'companyName': 'fake_company'},
                                                 {'subscriptionId': 555}]
-            res = self.client.post('/tenant', headers=self.headers, data=self.diskless_tenant)
+            res = self.client.post('/v1/tenant', headers=self.headers, data=self.diskless_tenant)
             instance.create.assert_called()
         assert res.status_code == 201
 
@@ -65,7 +65,7 @@ class TestTenant(TestCase):
                 'gold': 2
             }
             instance.storage = {'usage': 1}
-            res = self.client.get('/tenant/123', headers=self.headers)
+            res = self.client.get('/v1/tenant/123', headers=self.headers)
             data = res.json
             assert data[config.diskspace_resource]['usage'] == 1
             assert data[config.users_resource]['usage'] == 1
@@ -78,7 +78,7 @@ class TestTenant(TestCase):
                 patch('connector.resources.tenant.get_name_for_tenant') as fake_name:
             instance = fake_client.return_value
             fake_name.return_value = 'fake_client'
-            res = self.client.put('/tenant/123', headers=self.headers,
+            res = self.client.put('/v1/tenant/123', headers=self.headers,
                                   data=self.new_tenant)
             instance.update.assert_called()
             assert res.status_code == 200
@@ -89,18 +89,18 @@ class TestTenant(TestCase):
                 patch('connector.resources.tenant.get_name_for_tenant') as fake_name:
             fake_name.return_value = 'fake_client'
             instance = fake_client.return_value
-            res = self.client.delete('/tenant/123', headers=self.headers)
+            res = self.client.delete('/v1/tenant/123', headers=self.headers)
             instance.delete.assert_called()
             assert res.status_code == 204
 
     @bypass_auth
     def test_tenant_disable(self):
-        res = self.client.put('/tenant/123/disable', headers=self.headers)
+        res = self.client.put('/v1/tenant/123/disable', headers=self.headers)
         assert res.status_code == 200
 
     @bypass_auth
     def test_tenant_enable(self):
-        res = self.client.put('/tenant/123/enable', headers=self.headers)
+        res = self.client.put('/v1/tenant/123/enable', headers=self.headers)
         assert res.status_code == 200
 
     @bypass_auth
@@ -111,7 +111,7 @@ class TestTenant(TestCase):
             fake_name.return_value = 'fake_client'
             user_instance = fake_user.return_value
             user_instance.login_link.return_value = 'login_link_with_token'
-            res = self.client.get('/tenant/123/adminlogin', headers=self.headers)
+            res = self.client.get('/v1/tenant/123/adminlogin', headers=self.headers)
             assert res.status_code == 200
             assert b'token' in res.data
 
@@ -127,7 +127,7 @@ class TestTenant(TestCase):
             fake_oa.get_resource.side_effect = OACommunicationException(fake_oa_response)
             user_instance = fake_user.return_value
             user_instance.login_link.return_value = 'login_link_for_manual_login'
-            res = self.client.get('/tenant/123/adminlogin', headers=self.headers)
+            res = self.client.get('/v1/tenant/123/adminlogin', headers=self.headers)
             assert res.status_code == 200
 
     def test_get_name_for_tenant(self):
@@ -142,10 +142,10 @@ class TestTenant(TestCase):
 
     @bypass_auth
     def test_tenant_delete_user(self):
-        res = self.client.delete('/tenant/123/users/123', headers=self.headers)
+        res = self.client.delete('/v1/tenant/123/users/123', headers=self.headers)
         assert res.status_code == 200
 
     @bypass_auth
     def test_tenant_new_user(self):
-        res = self.client.post('/tenant/123/users', headers=self.headers)
+        res = self.client.post('/v1/tenant/123/users', headers=self.headers)
         assert res.status_code == 200
