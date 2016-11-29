@@ -92,7 +92,6 @@ def after_request(response):
 
 
 resource_routes = {
-    '/': HealthCheck,
     '/app': ApplicationList,
     '/app/<app_id>': Application,
     '/app/<app_id>/tenants': ApplicationTenantNew,
@@ -112,6 +111,7 @@ resource_routes = {
     '/user/<user_id>/login': UserLogin,
 }
 
+api.add_resource(HealthCheck, '/', strict_slashes=False)
 for route, resource in resource_routes.items():
     api.add_resource(resource, route)
 
