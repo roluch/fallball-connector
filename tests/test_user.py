@@ -43,7 +43,7 @@ class TestUser(TestCase):
             client_instance.storage = {'limit': 100}
             fake_oa.get_resources.return_value = [self.new_tenant]
             fake_oa.get_resource.return_value = self.oa_user
-            res = self.client.post('/user', headers=self.headers,
+            res = self.client.post('/v1/user', headers=self.headers,
                                    data=json.dumps(self.user_service))
             user_instance.create.assert_called()
             assert res.status_code == 201
@@ -58,7 +58,7 @@ class TestUser(TestCase):
             fake_user['userId'] = 'user@localhost'
             fake_oa.get_resource.return_value = fake_user
             fake_oa.get_resources.return_value = [self.new_tenant]
-            res = self.client.delete('/user/123', headers=self.headers)
+            res = self.client.delete('/v1/user/123', headers=self.headers)
             instance.delete.assert_called()
             assert res.status_code == 204
 
@@ -67,7 +67,7 @@ class TestUser(TestCase):
         with patch('connector.resources.user.make_fallball_user') as fake_user:
             instance = fake_user.return_value
             instance.client.name = 'fake_client'
-            res = self.client.put('/user/123', headers=self.headers, data='{}')
+            res = self.client.put('/v1/user/123', headers=self.headers, data='{}')
             assert res.status_code == 200
 
     @bypass_auth
@@ -76,7 +76,7 @@ class TestUser(TestCase):
             instance = fake_user.return_value
             instance.client.name = 'fake_client'
             instance.login_link.return_value = 'login_link'
-            res = self.client.get('/user/123/login', headers=self.headers)
+            res = self.client.get('/v1/user/123/login', headers=self.headers)
             assert b'login_link' in res.data
 
     def test_make_fallball_user(self):

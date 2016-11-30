@@ -21,40 +21,40 @@ class TestApp(TestCase):
         return app
 
     def test_healthcheck(self):
-        res = self.client.get('/')
+        res = self.client.get('/v1/')
         assert 'status' in res.json.keys()
         self.assert200(res)
 
     def test_no_authorization(self):
-        res = self.client.get('/app/12345')
+        res = self.client.get('/v1/app/12345')
         assert res.status_code == 401
 
     @bypass_auth
     def test_new_app(self):
-        res = self.client.post('/app', headers=self.headers, data=self.new_app)
+        res = self.client.post('/v1/app', headers=self.headers, data=self.new_app)
         assert res.status_code == 201
 
     @bypass_auth
     def test_delete_app(self):
-        res = self.client.delete('/app/123-123-123', headers=self.headers)
+        res = self.client.delete('/v1/app/123-123-123', headers=self.headers)
         assert res.status_code == 200
 
     @bypass_auth
     def test_delete_not_your_app(self):
-        res = self.client.delete('/app/someone_elses_app', headers=self.headers)
+        res = self.client.delete('/v1/app/someone_elses_app', headers=self.headers)
         assert res.status_code == 403
 
     @bypass_auth
     def test_app_new_tenant(self):
-        res = self.client.post('/app/123/tenants', headers=self.headers)
+        res = self.client.post('/v1/app/123/tenants', headers=self.headers)
         assert res.status_code == 200
 
     @bypass_auth
     def test_app_delete_tenant(self):
-        res = self.client.delete('/app/123/tenants/123', headers=self.headers)
+        res = self.client.delete('/v1/app/123/tenants/123', headers=self.headers)
         assert res.status_code == 200
 
     @bypass_auth
     def test_app_upgrade(self):
-        res = self.client.post('/app/123/upgrade?version=100-500', headers=self.headers)
+        res = self.client.post('/v1/app/123/upgrade?version=100-500', headers=self.headers)
         assert res.status_code == 200
