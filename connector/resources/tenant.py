@@ -1,5 +1,5 @@
-from flask import g, make_response, request
-from flask_restful import Resource, reqparse, abort
+from flask import g, make_response
+from flask_restful import Resource, reqparse
 
 from connector.config import Config
 from connector.fbclient.user import User as FbUser
