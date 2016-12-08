@@ -1,6 +1,7 @@
 import logging
 import sys
 import json
+import re
 
 from flask import g
 
@@ -88,3 +89,9 @@ def log_response(response):
                  "headers": dict(response.headers),
                  "data": response.data.decode('utf-8'),
                  "company": g.company_name})
+
+
+def escape_domain_name(name):
+    valid_name = re.sub(r'[^a-zA-Z0-9-.]', '-', name)
+    valid_name = re.sub(r'(^-+)|(-+$)', '', valid_name)
+    return valid_name
