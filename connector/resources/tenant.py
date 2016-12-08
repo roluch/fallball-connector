@@ -18,7 +18,9 @@ def get_name_for_tenant(tenant_id):
 
 
 def make_default_fallball_admin(client):
-    email = 'admin@{reseller_name}.fallball.io'.format(reseller_name=client.reseller.name)
+    email = 'admin@{client_name}.{reseller_name}.fallball.io'.format(
+            client_name=client.name,
+            reseller_name=client.reseller.name)
     user = FbUser(client=client, email=email, admin=True, storage={'limit': 0})
     return user
 
@@ -55,6 +57,7 @@ class TenantList(Resource):
         client = Client(g.reseller, name=company_name, is_integrated=user_integration_enabled,
                         storage={'limit': storage_limit})
         client.create()
+
         if not user_integration_enabled:
             user = make_default_fallball_admin(client)
             user.create()
