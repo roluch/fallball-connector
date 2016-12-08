@@ -7,6 +7,7 @@ from connector.app import app
 from connector.resources.tenant import get_name_for_tenant
 from connector.resources import OACommunicationException
 from connector.config import Config
+from connector.fbclient.reseller import Reseller
 from tests.utils import bypass_auth
 
 config = Config()
@@ -36,6 +37,7 @@ class TestTenant(TestCase):
                 patch('connector.resources.tenant.OA') as fake_oa:
             instance = fake_client.return_value
             instance.name = 'fake_company_name'
+            instance.reseller = Reseller('fake_reseller')
             fake_oa.get_resource.side_effect = [{'companyName': 'fake_company'},
                                                 {'subscriptionId': 555}]
             res = self.client.post('/v1/tenant', headers=self.headers, data=self.new_tenant)
@@ -48,6 +50,7 @@ class TestTenant(TestCase):
                 patch('connector.resources.tenant.OA') as fake_oa:
             instance = fake_client.return_value
             instance.name = 'fake_company_name'
+            instance.reseller = Reseller('fake_reseller')
             fake_oa.get_resource.side_effect = [{'companyName': 'fake_company'},
                                                 {'subscriptionId': 555}]
             res = self.client.post('/v1/tenant', headers=self.headers, data=self.diskless_tenant)
@@ -105,9 +108,11 @@ class TestTenant(TestCase):
     @bypass_auth
     def test_admin_login(self):
         with patch('connector.resources.tenant.get_name_for_tenant') as fake_name, \
+                patch('connector.resources.tenant.g') as fake_g, \
                 patch('connector.resources.tenant.OA'), \
                 patch('connector.resources.tenant.FbUser') as fake_user:
             fake_name.return_value = 'fake_client'
+            fake_g.reseller = Reseller('fake_reseller')
             user_instance = fake_user.return_value
             user_instance.login_link.return_value = 'login_link_with_token'
             res = self.client.get('/v1/tenant/123/adminlogin', headers=self.headers)
@@ -117,9 +122,11 @@ class TestTenant(TestCase):
     @bypass_auth
     def test_admin_login_no_user_in_oa(self):
         with patch('connector.resources.tenant.get_name_for_tenant') as fake_name, \
+                patch('connector.resources.tenant.g') as fake_g, \
                 patch('connector.resources.tenant.OA') as fake_oa, \
                 patch('connector.resources.tenant.FbUser') as fake_user:
             fake_name.return_value = 'fake_client'
+            fake_g.reseller = Reseller('fake_reseller')
             fake_oa_response = MagicMock()
             fake_oa_response.status_code = 404
             fake_oa_response.text = 'Get user from OA failed'
