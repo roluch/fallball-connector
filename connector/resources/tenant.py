@@ -5,6 +5,7 @@ from connector.config import Config
 from connector.fbclient.user import User as FbUser
 from connector.fbclient.client import Client
 from . import parameter_validator, urlify, Memoize, OA, OACommunicationException
+from connector.utils import escape_domain_name
 
 config = Config()
 
@@ -19,8 +20,9 @@ def get_name_for_tenant(tenant_id):
 
 def make_default_fallball_admin(client):
     email = 'admin@{client_name}.{reseller_name}.fallball.io'.format(
-            client_name=client.name,
-            reseller_name=client.reseller.name)
+            client_name=escape_domain_name(client.name),
+            reseller_name=escape_domain_name(client.reseller.name))
+
     user = FbUser(client=client, email=email, admin=True, storage={'limit': 0})
     return user
 
