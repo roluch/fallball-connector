@@ -1,5 +1,5 @@
-from flask import g, make_response, request
-from flask_restful import Resource, reqparse, abort
+from flask import g, make_response
+from flask_restful import Resource, reqparse
 
 from connector.config import Config
 from connector.fbclient.user import User as FbUser
@@ -15,6 +15,14 @@ def get_name_for_tenant(tenant_id):
     if 'tenantId' not in tenant_resource:
         raise KeyError("tenantId property is missing in OA resource {}".format(tenant_id))
     return tenant_resource['tenantId']
+
+
+def make_default_fallball_admin(client):
+    email = 'admin@{client_name}.{reseller_name}.fallball.io'.format(
+            client_name=client.name,
+            reseller_name=client.reseller.name)
+    user = FbUser(client=client, email=email, admin=True, storage={'limit': 0})
+    return user
 
 
 class TenantList(Resource):
@@ -49,6 +57,11 @@ class TenantList(Resource):
         client = Client(g.reseller, name=company_name, is_integrated=user_integration_enabled,
                         storage={'limit': storage_limit})
         client.create()
+
+        if not user_integration_enabled:
+            user = make_default_fallball_admin(client)
+            user.create()
+
         return {'tenantId': client.name}, 201
 
 
@@ -103,14 +116,10 @@ class TenantEnable(Resource):
 
 class TenantAdminLogin(Resource):
     def get(self, tenant_id):
-        company_name = g.company_name = get_name_for_tenant(tenant_id)
-        user_id = request.headers.get('aps-identity-id')
-        if not user_id:
-            abort(400)
         try:
-            email = OA.get_resource(user_id)['email']
-            client = Client(reseller=g.reseller, name=company_name)
-            user = FbUser(client=client, email=email)
+            company_name = g.company_name = get_name_for_tenant(tenant_id)
+            client = Client(g.reseller, name=company_name)
+            user = make_default_fallball_admin(client)
             login_link = user.login_link()
         except OACommunicationException:
             # Requesting login link for non-existing user to get link to login form from service
