@@ -9,6 +9,7 @@ except ImportError:
     from urlparse import urljoin
 
 import re
+import json
 
 import requests
 from flask import g, request
@@ -42,30 +43,47 @@ class OACommunicationException(Exception):
 
 
 class OA(object):
-    @staticmethod
-    def get_resource(resource_id):
-        oa_uri = request.headers.get('aps-controller-uri')
-        transaction_id = request.headers.get('aps-transaction-id')
-        rql_request = 'aps/2/resources/{}'.format(resource_id)
-        oa_request = urljoin(oa_uri, rql_request)
-        resp = requests.get(oa_request,
-                            headers={'aps-transaction-id': transaction_id},
-                            auth=g.auth)
-        if resp.status_code != 200:
-            raise OACommunicationException(resp)
-        return resp.json()
+    request_timeout = 20
 
     @staticmethod
-    def get_resources(rql_request):
+    def get_resource(resource_id, transaction=True, retry_num=10):
+        rql_request = 'aps/2/resources/{}'.format(resource_id)
+        return OA.send_request('get', rql_request, transaction=transaction, retry_num=retry_num)
+
+    @staticmethod
+    def get_resources(rql_request, transaction=True, retry_num=10):
+        return OA.send_request('get', rql_request, transaction=transaction, retry_num=retry_num)
+
+    @staticmethod
+    def send_request(method, path, body=None, transaction=True, retry_num=10):
         oa_uri = request.headers.get('aps-controller-uri')
-        transaction_id = request.headers.get('aps-transaction-id')
-        oa_request = urljoin(oa_uri, rql_request)
-        resp = requests.get(oa_request,
-                            headers={'aps-transaction-id': transaction_id},
-                            auth=g.auth)
-        if resp.status_code != 200:
-            raise OACommunicationException(resp)
-        return resp.json()
+        url = urljoin(oa_uri, path)
+
+        headers = {'Content-Type': 'application/json'}
+        if transaction:
+            headers['aps-transaction-id'] = request.headers.get('aps-transaction-id')
+
+        data = None if body is None else json.dumps(body)
+
+        retry_num = retry_num if retry_num > 0 else 1
+
+        while retry_num > 0:
+            retry_num -= 1
+            resp = requests.request(
+                method=method,
+                url=url,
+                data=data,
+                headers=headers,
+                auth=g.auth,
+                timeout=OA.request_timeout
+            )
+
+            if resp.status_code == 200:
+                return resp.json()
+            elif resp.status_code != 400:
+                raise OACommunicationException(resp)
+
+        raise OACommunicationException(resp)
 
 
 class Memoize(object):
