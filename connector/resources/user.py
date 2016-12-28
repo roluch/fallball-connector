@@ -1,11 +1,11 @@
 from flask import g, make_response
-from flask_restful import Resource, reqparse
+from flask_restful import reqparse
 
 from connector.config import Config
 from connector.fbclient.user import User as FbUser
 from connector.fbclient.client import Client
 from connector.resources.tenant import get_name_for_tenant
-from . import OA, parameter_validator
+from . import ConnectorResource, OA, parameter_validator
 
 config = Config()
 
@@ -21,7 +21,7 @@ user_types = {
 }
 
 
-class UserList(Resource):
+class UserList(ConnectorResource):
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('aps', dest='aps_type', type=parameter_validator('type'),
@@ -56,7 +56,7 @@ class UserList(Resource):
         return {'userId': user.email}, 201
 
 
-class User(Resource):
+class User(ConnectorResource):
     def delete(self, user_id):
         user = make_fallball_user(user_id)
         g.company_name = user.client.name
@@ -80,7 +80,7 @@ class User(Resource):
         return {}, 200
 
 
-class UserLogin(Resource):
+class UserLogin(ConnectorResource):
     def get(self, user_id):
         user = make_fallball_user(user_id)
         g.company_name = user.client.name
