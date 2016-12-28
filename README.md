@@ -21,9 +21,13 @@ To run with docker, just run this in the project folder:
 Application is started in debug mode in docker container.
 
 ### Running without Docker
-Before using it install the requirements from `requirements.txt`:
+Install fallball-connector:
 
-    pip install -r requirements.txt
+    pip install .
+
+or
+
+	python setyp.py install
 
 It's a flask application, to run it simply start `app.py` from the `connector` package:
     
