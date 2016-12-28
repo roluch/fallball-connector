@@ -1,12 +1,10 @@
 import pkg_resources
 
 from flask import g
-from flask_restful import Resource, abort, reqparse
-
-from slumber.exceptions import HttpClientError, HttpServerError
+from flask_restful import abort, reqparse
 
 from connector.fbclient.reseller import Reseller
-from . import parameter_validator, Memoize, make_error
+from . import parameter_validator, Memoize, ConnectorResource
 
 env = pkg_resources.Environment()
 res = env._distmap.get('fallball-connector', [None])[0]
@@ -19,13 +17,13 @@ def get_reseller_name(reseller_id):
     return None if not res else res[0].name
 
 
-class HealthCheck(Resource):
+class HealthCheck(ConnectorResource):
     def get(self):
         return {'status': 'ok',
                 'version': version}
 
 
-class ApplicationList(Resource):
+class ApplicationList(ConnectorResource):
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('aps', dest='aps_type', type=parameter_validator('type'),
@@ -33,38 +31,27 @@ class ApplicationList(Resource):
         parser.add_argument('aps', dest='aps_id', type=parameter_validator('id'),
                             required=True, help='No APS id specified')
         args = parser.parse_args()
-
-        try:
-            g.reseller.create()
-        except (HttpClientError, HttpServerError) as e:
-            return make_error(e)
-
+        g.reseller.create()
         return {'aps': {'type': args.aps_type, 'id': args.aps_id}}, 201
 
 
-class Application(Resource):
+class Application(ConnectorResource):
     def delete(self, app_id):
         if g.reseller.reseller_name != app_id:
             abort(403)
-
-        try:
-            g.reseller.delete()
-        except (HttpClientError, HttpServerError) as e:
-            return make_error(e)
-
-        return {}
+        g.reseller.delete()
 
 
-class ApplicationUpgrade(Resource):
+class ApplicationUpgrade(ConnectorResource):
     def post(self, app_id):
         return {}
 
 
-class ApplicationTenantNew(Resource):
+class ApplicationTenantNew(ConnectorResource):
     def post(self, app_id, tenant_id=None):
         return {}
 
 
-class ApplicationTenantDelete(Resource):
+class ApplicationTenantDelete(ConnectorResource):
     def delete(self, app_id, tenant_id=None):
         return {}

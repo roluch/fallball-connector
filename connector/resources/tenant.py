@@ -1,12 +1,10 @@
 from flask import g, make_response
-from flask_restful import Resource, reqparse
-
-from slumber.exceptions import HttpClientError, HttpServerError
+from flask_restful import reqparse
 
 from connector.config import Config
 from connector.fbclient.user import User as FbUser
 from connector.fbclient.client import Client
-from . import parameter_validator, urlify, Memoize, OA, OACommunicationException, make_error
+from . import parameter_validator, urlify, Memoize, OA, OACommunicationException, ConnectorResource
 from connector.utils import escape_domain_name
 
 config = Config()
@@ -29,7 +27,7 @@ def make_default_fallball_admin(client):
     return user
 
 
-class TenantList(Resource):
+class TenantList(ConnectorResource):
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('aps', dest='aps_id', type=parameter_validator('id'),
@@ -60,32 +58,20 @@ class TenantList(Resource):
 
         client = Client(g.reseller, name=company_name, is_integrated=user_integration_enabled,
                         storage={'limit': storage_limit})
-
-        try:
-            client.create()
-        except (HttpClientError, HttpServerError) as e:
-            return make_error(e)
+        client.create()
 
         if not user_integration_enabled:
             user = make_default_fallball_admin(client)
-            try:
-                user.create()
-            except (HttpClientError, HttpServerError) as e:
-                return make_error(e)
+            user.create()
 
         return {'tenantId': client.name}, 201
 
 
-class Tenant(Resource):
+class Tenant(ConnectorResource):
     def get(self, tenant_id):
         company_name = g.company_name = get_name_for_tenant(tenant_id)
         client = Client(g.reseller, name=company_name)
-
-        try:
-            client.refresh()
-        except (HttpClientError, HttpServerError) as e:
-            return make_error(e)
-
+        client.refresh()
         return {
             config.users_resource: {
                 'usage': client.users_by_type['default']
@@ -108,39 +94,29 @@ class Tenant(Resource):
         if args.storage_limit:
             client = Client(g.reseller, name=company_name,
                             storage={'limit': args.storage_limit})
-
-            try:
-                client.update()
-            except (HttpClientError, HttpServerError) as e:
-                return make_error(e)
-
+            client.update()
         return {}
 
     def delete(self, tenant_id):
         company_name = g.company_name = get_name_for_tenant(tenant_id)
         client = Client(g.reseller, name=company_name)
-
-        try:
-            client.delete()
-        except (HttpClientError, HttpServerError) as e:
-            return make_error(e)
-
+        client.delete()
         return None, 204
 
 
-class TenantDisable(Resource):
+class TenantDisable(ConnectorResource):
     def put(self, tenant_id):
         # Not supported by the service yet
         return {}
 
 
-class TenantEnable(Resource):
+class TenantEnable(ConnectorResource):
     def put(self, tenant_id):
         # Not supported by the service yet
         return {}
 
 
-class TenantAdminLogin(Resource):
+class TenantAdminLogin(ConnectorResource):
     def get(self, tenant_id):
         try:
             company_name = g.company_name = get_name_for_tenant(tenant_id)
@@ -157,11 +133,11 @@ class TenantAdminLogin(Resource):
         return response
 
 
-class TenantUserCreated(Resource):
+class TenantUserCreated(ConnectorResource):
     def post(self, tenant_id):
         return {}
 
 
-class TenantUserRemoved(Resource):
+class TenantUserRemoved(ConnectorResource):
     def delete(self, tenant_id, user_id):
         return {}

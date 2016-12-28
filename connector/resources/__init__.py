@@ -13,6 +13,9 @@ import json
 
 import requests
 from flask import g, request
+from flask_restful import Resource
+
+from slumber.exceptions import HttpClientError, HttpServerError
 
 
 def parameter_validator(*args):
@@ -37,6 +40,14 @@ def urlify(data):
 
 def make_error(e):
     return {'message': e.response.text.strip('"')}, e.response.status_code
+
+
+class ConnectorResource(Resource):
+    def dispatch_request(self, *args, **kwargs):
+        try:
+            return super(ConnectorResource, self).dispatch_request(*args, **kwargs)
+        except (HttpClientError, HttpServerError) as e:
+            return make_error(e)
 
 
 class OACommunicationException(Exception):
