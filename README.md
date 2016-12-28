@@ -25,10 +25,6 @@ Install fallball-connector:
 
     pip install .
 
-or
-
-	python setyp.py install
-
 It's a flask application, to run it simply start `app.py` from the `connector` package:
     
     python app.py
