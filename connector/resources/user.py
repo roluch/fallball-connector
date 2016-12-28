@@ -1,11 +1,13 @@
 from flask import g, make_response
 from flask_restful import Resource, reqparse
 
+from slumber.exceptions import HttpClientError, HttpServerError
+
 from connector.config import Config
 from connector.fbclient.user import User as FbUser
 from connector.fbclient.client import Client
 from connector.resources.tenant import get_name_for_tenant
-from . import OA, parameter_validator
+from . import OA, parameter_validator, make_error
 
 config = Config()
 
@@ -51,7 +53,11 @@ class UserList(Resource):
         user = FbUser(client, email=oa_user['email'], admin=oa_user['isAccountAdmin'],
                       storage={'limit': limit},
                       profile_type=user_types.get(args.user_type, 'default'))
-        user.create()
+
+        try:
+            user.create()
+        except (HttpClientError, HttpServerError) as e:
+            return make_error(e)
 
         return {'userId': user.email}, 201
 
@@ -60,7 +66,11 @@ class User(Resource):
     def delete(self, user_id):
         user = make_fallball_user(user_id)
         g.company_name = user.client.name
-        user.delete()
+
+        try:
+            user.delete()
+        except (HttpClientError, HttpServerError) as e:
+            return make_error(e)
 
         return {}, 204
 
@@ -69,14 +79,19 @@ class User(Resource):
         parser.add_argument('resource', dest='user_type', type=str, required=False)
         args = parser.parse_args()
         user = make_fallball_user(user_id)
-        user.refresh()
-        client = user.client
-        client.refresh()
-        g.company_name = client.name
-        user.storage['limit'] = 0 if client.storage['limit'] == 0 else get_limit(args.user_type)
-        if args.user_type in user_types:
-            user.profile_type = user_types.get(args.user_type)
-        user.update()
+        try:
+            user.refresh()
+            client = user.client
+            client.refresh()
+            g.company_name = client.name
+            user.storage['limit'] = 0 if client.storage['limit'] == 0 else get_limit(args.user_type)
+            if args.user_type in user_types:
+                user.profile_type = user_types.get(args.user_type)
+
+            user.update()
+        except (HttpClientError, HttpServerError) as e:
+            return make_error(e)
+
         return {}, 200
 
 

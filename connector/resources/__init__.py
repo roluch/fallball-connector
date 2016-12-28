@@ -35,6 +35,10 @@ def urlify(data):
                   re.sub(r'[^\w\s]', '', data))
 
 
+def make_error(e):
+    return {'message': e.response.text.strip('"')}, e.response.status_code
+
+
 class OACommunicationException(Exception):
     def __init__(self, resp):
         msg = "Request to OA failed. OA responded with code {}\n{}".format(resp.status_code,

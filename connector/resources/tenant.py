@@ -1,10 +1,12 @@
 from flask import g, make_response
 from flask_restful import Resource, reqparse
 
+from slumber.exceptions import HttpClientError, HttpServerError
+
 from connector.config import Config
 from connector.fbclient.user import User as FbUser
 from connector.fbclient.client import Client
-from . import parameter_validator, urlify, Memoize, OA, OACommunicationException
+from . import parameter_validator, urlify, Memoize, OA, OACommunicationException, make_error
 from connector.utils import escape_domain_name
 
 config = Config()
@@ -58,11 +60,18 @@ class TenantList(Resource):
 
         client = Client(g.reseller, name=company_name, is_integrated=user_integration_enabled,
                         storage={'limit': storage_limit})
-        client.create()
+
+        try:
+            client.create()
+        except (HttpClientError, HttpServerError) as e:
+            return make_error(e)
 
         if not user_integration_enabled:
             user = make_default_fallball_admin(client)
-            user.create()
+            try:
+                user.create()
+            except (HttpClientError, HttpServerError) as e:
+                return make_error(e)
 
         return {'tenantId': client.name}, 201
 
@@ -71,7 +80,12 @@ class Tenant(Resource):
     def get(self, tenant_id):
         company_name = g.company_name = get_name_for_tenant(tenant_id)
         client = Client(g.reseller, name=company_name)
-        client.refresh()
+
+        try:
+            client.refresh()
+        except (HttpClientError, HttpServerError) as e:
+            return make_error(e)
+
         return {
             config.users_resource: {
                 'usage': client.users_by_type['default']
@@ -94,13 +108,23 @@ class Tenant(Resource):
         if args.storage_limit:
             client = Client(g.reseller, name=company_name,
                             storage={'limit': args.storage_limit})
-            client.update()
+
+            try:
+                client.update()
+            except (HttpClientError, HttpServerError) as e:
+                return make_error(e)
+
         return {}
 
     def delete(self, tenant_id):
         company_name = g.company_name = get_name_for_tenant(tenant_id)
         client = Client(g.reseller, name=company_name)
-        client.delete()
+
+        try:
+            client.delete()
+        except (HttpClientError, HttpServerError) as e:
+            return make_error(e)
+
         return None, 204
 
 
