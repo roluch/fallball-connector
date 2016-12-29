@@ -58,7 +58,7 @@ class OACommunicationException(Exception):
 
 
 class OA(object):
-    request_timeout = 20
+    request_timeout = 50
 
     @staticmethod
     def get_resource(resource_id, transaction=True, retry_num=10):
