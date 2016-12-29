@@ -7,6 +7,7 @@ from flask import g
 
 logger = logging.getLogger(__file__)
 
+
 class ResellerNameFilter(logging.Filter):
     def filter(self, record):
         record.reseller_name = str(g.reseller_name)
@@ -24,7 +25,6 @@ class ConnectorLogFormatter(logging.Formatter):
         resp['level'] = record.levelname
         resp['reseller_id'] = record.reseller_name
         return json.dumps(resp)
-
 
 
 stream = logging.StreamHandler(sys.stdout)
