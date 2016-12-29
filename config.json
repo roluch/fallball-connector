@@ -1,9 +1,9 @@
 {
     "loglevel": "DEBUG",
-    "fallball_service_url": "https://service-dot-myfallball.appspot.com/v1/",
-    "fallball_service_authorization_token": "a2cfeb81268c26405a4aebffe91f5e6abfcad185",
-    "oauth_key": "fallball-local-deploy-v1-e75cd48",
-    "oauth_signature": "f30d01497121404cbe764b235566ec30",
+    "fallball_service_url": "PUT_HERE_FALLBALL_SERVICE_URI",
+    "fallball_service_authorization_token": "PUT_HERE_FALLBALL_SERVICE_AUTHORIZATION_TOKEN",
+    "oauth_key": "PUT_HERE_OAUTH_KEY",
+    "oauth_signature": "PUT_HERE_OAUTH_SIGNATURE",
     "diskspace_resource": "DISKSPACE",
     "users_resource": "USERS",
     "gold_users_resource": "GOLD_USERS",

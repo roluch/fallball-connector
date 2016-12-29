@@ -1,11 +1,15 @@
 from flask import g, make_response
+
 from flask_restful import reqparse
 
 from connector.config import Config
 from connector.fbclient.user import User as FbUser
 from connector.fbclient.client import Client
-from . import parameter_validator, urlify, Memoize, OA, OACommunicationException, ConnectorResource
 from connector.utils import escape_domain_name
+
+from . import (ConnectorResource, Memoize, OA, OACommunicationException,
+               parameter_validator, urlify)
+
 
 config = Config()
 

@@ -1,12 +1,14 @@
 import json
 
 from flask_testing import TestCase
+
 from mock import patch
 
 from connector.app import app
 from connector.resources.user import make_fallball_user
 from connector.fbclient.reseller import Reseller
 from connector.config import Config
+
 from tests.utils import bypass_auth
 
 config = Config()

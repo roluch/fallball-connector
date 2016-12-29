@@ -1,7 +1,9 @@
 from marshmallow import Schema, fields
+
 from requests.auth import AuthBase
 
 from connector.config import Config
+
 
 config = Config()
 

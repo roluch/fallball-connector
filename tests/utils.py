@@ -13,7 +13,7 @@ def bypass_auth(fn):
                 patch('connector.app.get_reseller_name') as reseller_name_mock:
             signature_mock.return_value = True
             reseller_name_mock.return_value = 'strategize-back-end-technologies'
-            key_mock.return_value = list(config.oauth.keys())[0]
+            key_mock.return_value = config.oauth_key
             instance = reseller_mock.return_value
             instance.reseller_name = '123-123-123'
             fn(*args, **kwargs)

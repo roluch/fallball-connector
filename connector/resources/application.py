@@ -1,10 +1,12 @@
 import pkg_resources
 
 from flask import g
+
 from flask_restful import abort, reqparse
 
 from connector.fbclient.reseller import Reseller
-from . import parameter_validator, Memoize, ConnectorResource
+
+from . import ConnectorResource, Memoize, parameter_validator
 
 env = pkg_resources.Environment()
 res = env._distmap.get('fallball-connector', [None])[0]

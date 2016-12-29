@@ -1,33 +1,43 @@
-import os
+import sys
+import logging
+
 from collections import namedtuple
 
 from flask import Flask, g, request
+
 from flask_restful import Api, abort
+
 from faker import Faker
+
 from requests_oauthlib import OAuth1
+
+from werkzeug.contrib.fixers import ProxyFix
 
 from connector.config import Config
 from connector.fbclient.reseller import Reseller
-from connector.resources.application import Application, ApplicationList, ApplicationUpgrade, \
-    ApplicationTenantDelete, ApplicationTenantNew, HealthCheck, get_reseller_name
+from connector.resources.application import (Application, ApplicationList, ApplicationTenantDelete,
+                                             ApplicationTenantNew, ApplicationUpgrade, HealthCheck,
+                                             get_reseller_name)
 from connector.resources.tenant import Tenant, TenantAdminLogin, TenantDisable, TenantEnable, \
     TenantList, TenantUserCreated, TenantUserRemoved
 from connector.resources.user import User, UserList, UserLogin
-from connector.utils import ReverseProxied, log_request, log_response
+from connector.utils import log_request, log_response
 from connector.validator import check_oauth_signature, get_client_key
 from connector.resources import urlify
 
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+stream = logging.StreamHandler(sys.stdout)
+logger.addHandler(stream)
+
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app)
 api = Api(app, prefix='/v1')
 
 fake = Faker()
 
 ResellerInfo = namedtuple('ResellerInfo', ['id', 'name', 'is_new', 'auth'])
-
-if os.getenv('REVERSE_PROXIED'):
-    app.wsgi_app = ReverseProxied(app.wsgi_app)
-
-debug = bool(os.getenv('DEBUG'))
 
 
 def allow_public_endpoints_only():
@@ -46,7 +56,7 @@ def set_name_for_reseller(reseller_id):
 
 def get_oauth():
     client_key = get_client_key(request)
-    client_secret = Config().oauth.get(client_key)
+    client_secret = Config().oauth_signature
     if not client_key or not client_secret:
         return None
     return OAuth1(client_key=client_key,
@@ -116,4 +126,5 @@ for route, resource in resource_routes.items():
     api.add_resource(resource, route, strict_slashes=False)
 
 if __name__ == '__main__':
-    app.run(debug=debug, host='0.0.0.0')
+    logger.info(" * Using CONFIG_FILE=%s", Config().conf_file)
+    app.run(debug=True if Config().loglevel == 'DEBUG' else False, host='0.0.0.0')

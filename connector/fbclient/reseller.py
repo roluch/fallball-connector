@@ -1,8 +1,10 @@
 import slumber
+
 from marshmallow import Schema, fields, post_load, pre_dump
+
 from slumber.exceptions import HttpNotFoundError
 
-from connector.fbclient import StorageSchema, FallBallAuth
+from connector.fbclient import FallBallAuth, StorageSchema
 from connector.fbclient import config
 
 
@@ -42,7 +44,7 @@ class Reseller(object):
 
     def api(self, token=None):
         token = token if token else self.token
-        return slumber.API(config.base_uri, auth=FallBallAuth(token))
+        return slumber.API(config.fallball_service_url, auth=FallBallAuth(token))
 
     def __repr__(self):
         return '<Reseller(name={})>'.format(self.name)
@@ -52,14 +54,14 @@ class Reseller(object):
         return ResellerSchema().dump(self).data
 
     def create(self):
-        api = self.api(config.application_token)
+        api = self.api(config.fallball_service_authorization_token)
         if not self.storage:
             self.storage = {'limit': 1000000}
         result = api.resellers.post(self._dump)
         return result
 
     def refresh(self):
-        api = self.api(config.application_token)
+        api = self.api(config.fallball_service_authorization_token)
         try:
             result = api.resellers(self.name).get()
             r = ResellerSchema().load(result).data
@@ -69,13 +71,14 @@ class Reseller(object):
             pass
 
     def delete(self):
-        api = self.api(config.application_token)
+        api = self.api(config.fallball_service_authorization_token)
         result = api.resellers(self.name).delete()
         return result
 
     @staticmethod
     def all():
-        api = slumber.API(config.base_uri, auth=FallBallAuth(config.application_token))
+        api = slumber.API(config.fallball_service_url,
+                          auth=FallBallAuth(config.fallball_service_authorization_token))
         result = api.resellers.get()
         resellers = ResellerSchema().load(result, many=True).data
         return resellers

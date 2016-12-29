@@ -1,13 +1,16 @@
 import json
 
 from flask_testing import TestCase
-from mock import patch, MagicMock
+
+from mock import MagicMock, patch
 
 from connector.app import app
+
 from connector.resources.tenant import get_name_for_tenant
 from connector.resources import OACommunicationException
 from connector.config import Config
 from connector.fbclient.reseller import Reseller
+
 from tests.utils import bypass_auth
 
 config = Config()

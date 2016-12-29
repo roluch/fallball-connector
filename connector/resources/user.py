@@ -1,10 +1,12 @@
 from flask import g, make_response
+
 from flask_restful import reqparse
 
 from connector.config import Config
 from connector.fbclient.user import User as FbUser
 from connector.fbclient.client import Client
 from connector.resources.tenant import get_name_for_tenant
+
 from . import ConnectorResource, OA, parameter_validator
 
 config = Config()
