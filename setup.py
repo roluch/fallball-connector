@@ -1,13 +1,16 @@
 import codecs
+
+from os.path import abspath, dirname, join
+
 from setuptools import find_packages, setup
+
 from pip.req import parse_requirements
 
-from os.path import join, abspath, dirname
 
 here = abspath(dirname(__file__))
 
 
-PACKAGE_VERSION = '0.1.0'
+PACKAGE_VERSION = '0.1.1'
 
 with codecs.open(join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()

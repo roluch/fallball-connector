@@ -24,12 +24,12 @@ class RequestValidator(oauth.RequestValidator):
         return True if client_key else False
 
     def validate_client_key(self, client_key, request):
-        return client_key in self._config.oauth
+        return client_key == self._config.oauth_key
 
     def get_client_secret(self, client_key, request):
         if client_key == 'dummy':
             return u'blah-blah-blah'
-        return self._config.oauth[client_key]
+        return self._config.oauth_signature
 
     def validate_timestamp_and_nonce(self, client_key, timestamp, nonce, request,
                                      request_token=None, access_token=None):

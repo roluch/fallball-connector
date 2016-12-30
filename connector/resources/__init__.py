@@ -1,3 +1,8 @@
+import re
+import json
+
+import requests
+
 try:
     from functools import reduce
 except ImportError:
@@ -8,11 +13,8 @@ try:
 except ImportError:
     from urlparse import urljoin
 
-import re
-import json
-
-import requests
 from flask import g, request
+
 from flask_restful import Resource
 
 from slumber.exceptions import HttpClientError, HttpServerError
