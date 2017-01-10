@@ -92,7 +92,8 @@ class OA(object):
                 data=data,
                 headers=headers,
                 auth=g.auth,
-                timeout=OA.request_timeout
+                timeout=OA.request_timeout,
+                verify=False
             )
 
             if resp.status_code == 200:
