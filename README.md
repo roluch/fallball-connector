@@ -9,10 +9,10 @@ This is a basic sample connector for the [Fallball Cloud Storage](https://github
 
 * Download and unzip fallball-connector
 
-* Install requirements
+* Install package and requirements for local development
 
 ```bash
-pip install .
+python setup.py develop
 ```
 
 * Update `config.json` file with your credantials
