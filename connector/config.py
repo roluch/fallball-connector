@@ -2,6 +2,19 @@ import json
 import os
 
 
+def check_configuration(config):
+    for item in [
+        'fallball_service_url',
+        'fallball_service_authorization_token',
+        'oauth_key',
+        'oauth_signature'
+    ]:
+        if getattr(config, item).startswith('PUT_HERE_'):
+            return False
+
+    return True
+
+
 class Config(object):
     conf_file = os.environ.get('CONFIG_FILE', './config.json')
     loglevel = None
@@ -31,6 +44,7 @@ class Config(object):
             Config.gold_user_limit = config.get('gold_user_limit', 15)
             Config.gold_users_resource = config.get('gold_users_resource', 'GOLD_USERS')
             Config.loglevel = config.get('loglevel', 'DEBUG')
+
             try:
                 Config.diskspace_resource = config['diskspace_resource']
                 Config.users_resource = config['users_resource']
