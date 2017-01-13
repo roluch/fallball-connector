@@ -13,7 +13,7 @@ from requests_oauthlib import OAuth1
 
 from werkzeug.contrib.fixers import ProxyFix
 
-from connector.config import Config
+from connector.config import Config, check_configuration
 from connector.fbclient.reseller import Reseller
 from connector.resources.application import (Application, ApplicationList, ApplicationTenantDelete,
                                              ApplicationTenantNew, ApplicationUpgrade, HealthCheck,
@@ -127,4 +127,11 @@ for route, resource in resource_routes.items():
 
 if __name__ == '__main__':
     logger.info(" * Using CONFIG_FILE=%s", Config().conf_file)
+
+    if not check_configuration(Config()):
+        raise RuntimeError("You can't run your connector with default "
+                           "parameters, please update the JSON config "
+                           "file and replace PUT_HERE_* values with real "
+                           "ones")
+
     app.run(debug=True if Config().loglevel == 'DEBUG' else False, host='0.0.0.0')
