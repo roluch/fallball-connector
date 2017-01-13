@@ -3,12 +3,12 @@ import os
 
 
 def check_configuration(config):
-    for item in [
+    for item in (
         'fallball_service_url',
         'fallball_service_authorization_token',
         'oauth_key',
-        'oauth_signature'
-    ]:
+        'oauth_signature',
+    ):
         if getattr(config, item).startswith('PUT_HERE_'):
             return False
 
