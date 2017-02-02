@@ -39,7 +39,7 @@ class TestApp(TestCase):
     @bypass_auth
     def test_delete_app(self):
         res = self.client.delete('/v1/app/123-123-123', headers=self.headers)
-        assert res.status_code == 200
+        assert res.status_code == 204
 
     @bypass_auth
     def test_delete_not_your_app(self):
