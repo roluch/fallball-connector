@@ -42,6 +42,7 @@ class Application(ConnectorResource):
         if g.reseller.reseller_name != app_id:
             abort(403)
         g.reseller.delete()
+        return {}, 204
 
 
 class ApplicationUpgrade(ConnectorResource):

@@ -14,7 +14,8 @@ FallBall Connector implements the APS Lite connector API for FallBall sample app
 + Response 200 (application/json)
 
         {
-            "status": "ok"
+            "status": "ok",
+            "version": "1.0"
         }
 
 
@@ -22,20 +23,33 @@ FallBall Connector implements the APS Lite connector API for FallBall sample app
 
 ###  Partner creates new application instance [POST /app]
 
-+ Response 200 (application/json)
++ Request (application/json)
+    + Attributes (object)
+        + aps (object)
+            + type (string)
+            + id (string)
+
++ Response 201 (application/json)
 
         {
+            "aps": {
+                "id": "24ed300f-9c1f-4d8c-948f-d23319c31c2a",
+                "type": "http://aps.odin.com/app/fallball-connector/app/1.0"
+            }
         }
 
 
 ###  Partner deinstall application [DELETE /app/{id}]
 
-+ Response 200 (application/json)
++ Response 204 (application/json)
 
-        {
-        }
-        
-###  Partner upgrades application [POST /app/{id}/upgrade]
+
+###  Partner upgrades application [POST /app/{id}/upgrade{?version}]
+
+Version parameter will contain the app version the connector is upgraded from.
+
++ Parameters
+    + version (string)
 
 + Response 200 (application/json)
 
@@ -55,7 +69,7 @@ FallBall Connector implements the APS Lite connector API for FallBall sample app
 
         {
         }
- 
+
 
 ## Tenant [/tenant]
 
@@ -63,21 +77,55 @@ Resources related to subscription API
 
 ### Create a new subscription [POST /tenant]
 
-+ Response 200 (application/json)
++ Request (application/json)
+    + Attributes (object)
+        + aps (object)
+            + type (string)
+            + id (string)
+        + DEVICES (object)
+            + limit (number)
+        + DISKSPACE (object)
+            + limit (number)
+        + USERS (object)
+            + limit (number)
+        + oaSubscription (object)
+            + aps (object)
+                + id (string)
+        + oaAccout (object)
+            + aps (object)
+                + id (string)
+
++ Response 201 (application/json)
 
         {
+            "tenantId": "Davis-and-Sons-sub446"
         }
-   
-    
+
+
+
 ### Get application resource usage [GET /tenant/{id}]
 
 + Response 200 (application/json)
 
         {
+            "DEVICES": {
+                "usage": 5
+            },
+            "DISKSPACE": {
+                "usage": 10
+            },
+            "USERS": {
+                "usage": 2
+            }
         }
-    
 
-### Update application resource limits [PUT /tenant/{id}]
+
+### Update subscription resource limits [PUT /tenant/{id}]
+
++ Request (application/json)
+    + Attributes (object)
+        + DISKSPACE (object)
+            + limit (number)
 
 + Response 200 (application/json)
 
@@ -108,8 +156,8 @@ Resources related to subscription API
 ### Login to application [GET /tenant/{id}/adminlogin]
 
 + Response 200 (text/plain)
-    
-        http://www.odin.com
+
+        http://fallball.io/#/auth?token=eyJhbGciOiJE
 
 ### New user notification [POST /tenant/{id}/users]
 
@@ -131,19 +179,38 @@ Resources related to subscription API
 
 ###  Create new user [POST /user]
 
+The `resource` request attribute will contain the type of user service to assign to user. E.g. 'USERS'.
+
++ Request (application/json)
+    + Attributes (object)
+        + aps (object)
+            + type (string)
+        + tenant (object)
+            + aps (object)
+                + id (string)
+        + user (object)
+            + aps (object)
+                + id (string)
+        + resource (string)
+
 + Response 200 (application/json)
 
         {
+            "userId": "wilsonthomas@example.net"
         }
 
 ###  Remove user [DELETE /user/{id}]
 
-+ Response 200 (application/json)
++ Response 204 (application/json)
 
-        {
-        }
 
 ###  Update user [PUT /user/{id}]
+
+Assign a different service to user.
+
++ Request (application/json)
+    + Attributes (object)
+        + resource (string)
 
 + Response 200 (application/json)
 
@@ -153,5 +220,5 @@ Resources related to subscription API
 ### Log user in [GET /user/{id}/login]
 
 + Response 200 (text/plain)
-    
-        http://www.odin.com
+
+        http://fallball.io/#/auth?token=CJleHAiOjE0O
