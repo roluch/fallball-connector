@@ -28,7 +28,7 @@ class TestApp(TestCase):
         self.assert200(res)
 
     def test_no_authorization(self):
-        res = self.client.get('/v1/app/12345')
+        res = self.client.delete('/v1/app/12345')
         assert res.status_code == 401
 
     @bypass_auth
