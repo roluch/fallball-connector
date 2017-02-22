@@ -1,15 +1,13 @@
 import json
 
 from flask_testing import TestCase
-
 from mock import patch
 
 from connector.app import app
-from connector.resources.user import make_fallball_user
-from connector.fbclient.reseller import Reseller
 from connector.config import Config
-
-from tests.utils import bypass_auth
+from connector.fbclient.reseller import Reseller
+from connector.v1.resources.user import make_fallball_user
+from tests.v1.utils import bypass_auth
 
 config = Config()
 
@@ -34,10 +32,10 @@ class TestUser(TestCase):
 
     @bypass_auth
     def test_new_user(self):
-        with patch('connector.resources.user.OA') as fake_oa, \
-                patch('connector.resources.user.FbUser') as fake_user, \
-                patch('connector.resources.user.Client') as fake_client, \
-                patch('connector.resources.user.get_name_for_tenant') as fake_name:
+        with patch('connector.v1.resources.user.OA') as fake_oa, \
+                patch('connector.v1.resources.user.FbUser') as fake_user, \
+                patch('connector.v1.resources.user.Client') as fake_client, \
+                patch('connector.v1.resources.user.get_name_for_tenant') as fake_name:
             user_instance = fake_user.return_value
             client_instance = fake_client.return_value
             fake_name.return_value = 'fake_client'
@@ -52,8 +50,8 @@ class TestUser(TestCase):
 
     @bypass_auth
     def test_delete_user(self):
-        with patch('connector.resources.user.OA') as fake_oa, \
-                patch('connector.resources.user.make_fallball_user') as fake_user:
+        with patch('connector.v1.resources.user.OA') as fake_oa, \
+                patch('connector.v1.resources.user.make_fallball_user') as fake_user:
             instance = fake_user.return_value
             instance.client.name = 'fake_client'
             fake_user = self.user_service
@@ -66,7 +64,7 @@ class TestUser(TestCase):
 
     @bypass_auth
     def test_update_user(self):
-        with patch('connector.resources.user.make_fallball_user') as fake_user:
+        with patch('connector.v1.resources.user.make_fallball_user') as fake_user:
             instance = fake_user.return_value
             instance.client.name = 'fake_client'
             res = self.client.put('/v1/user/123', headers=self.headers, data='{}')
@@ -74,7 +72,7 @@ class TestUser(TestCase):
 
     @bypass_auth
     def test_user_login(self):
-        with patch('connector.resources.user.make_fallball_user') as fake_user:
+        with patch('connector.v1.resources.user.make_fallball_user') as fake_user:
             instance = fake_user.return_value
             instance.client.name = 'fake_client'
             instance.login_link.return_value = 'login_link'
@@ -82,9 +80,9 @@ class TestUser(TestCase):
             assert b'login_link' in res.data
 
     def test_make_fallball_user(self):
-        with patch('connector.resources.user.OA') as fake_oa, \
-                patch('connector.resources.user.g') as fake_g, \
-                patch('connector.resources.user.get_name_for_tenant') as fake_name:
+        with patch('connector.v1.resources.user.OA') as fake_oa, \
+                patch('connector.v1.resources.user.g') as fake_g, \
+                patch('connector.v1.resources.user.get_name_for_tenant') as fake_name:
             fake_oa.get_resource.return_value = self.user_service
             fake_g.reseller = Reseller('fake_reseller')
             fake_name.return_value = 'fake_client'

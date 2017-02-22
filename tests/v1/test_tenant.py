@@ -1,17 +1,14 @@
 import json
 
 from flask_testing import TestCase
-
 from mock import MagicMock, patch
 
 from connector.app import app
-
-from connector.resources.tenant import get_name_for_tenant
-from connector.resources import OACommunicationException
 from connector.config import Config
 from connector.fbclient.reseller import Reseller
-
-from tests.utils import bypass_auth
+from connector.v1.resources import OACommunicationException
+from connector.v1.resources.tenant import get_name_for_tenant
+from tests.v1.utils import bypass_auth
 
 config = Config()
 
@@ -36,8 +33,8 @@ class TestTenant(TestCase):
 
     @bypass_auth
     def test_new_tenant(self):
-        with patch('connector.resources.tenant.Client') as fake_client, \
-                patch('connector.resources.tenant.OA') as fake_oa:
+        with patch('connector.v1.resources.tenant.Client') as fake_client, \
+                patch('connector.v1.resources.tenant.OA') as fake_oa:
             instance = fake_client.return_value
             instance.name = 'fake_company_name'
             instance.reseller = Reseller('fake_reseller')
@@ -49,8 +46,8 @@ class TestTenant(TestCase):
 
     @bypass_auth
     def test_new_tenant_no_diskspace(self):
-        with patch('connector.resources.tenant.Client') as fake_client, \
-                patch('connector.resources.tenant.OA') as fake_oa:
+        with patch('connector.v1.resources.tenant.Client') as fake_client, \
+                patch('connector.v1.resources.tenant.OA') as fake_oa:
             instance = fake_client.return_value
             instance.name = 'fake_company_name'
             instance.reseller = Reseller('fake_reseller')
@@ -62,8 +59,8 @@ class TestTenant(TestCase):
 
     @bypass_auth
     def test_resource_usage(self):
-        with patch('connector.resources.tenant.Client') as fake_client, \
-                patch('connector.resources.tenant.get_name_for_tenant') as fake_name:
+        with patch('connector.v1.resources.tenant.Client') as fake_client, \
+                patch('connector.v1.resources.tenant.get_name_for_tenant') as fake_name:
             instance = fake_client.return_value
             fake_name.return_value = 'fake_client'
             instance.users_by_type = {
@@ -79,8 +76,8 @@ class TestTenant(TestCase):
 
     @bypass_auth
     def test_update_tenant(self):
-        with patch('connector.resources.tenant.Client') as fake_client, \
-                patch('connector.resources.tenant.get_name_for_tenant') as fake_name:
+        with patch('connector.v1.resources.tenant.Client') as fake_client, \
+                patch('connector.v1.resources.tenant.get_name_for_tenant') as fake_name:
             instance = fake_client.return_value
             fake_name.return_value = 'fake_client'
             res = self.client.put('/v1/tenant/123', headers=self.headers,
@@ -90,8 +87,8 @@ class TestTenant(TestCase):
 
     @bypass_auth
     def test_delete_tenant(self):
-        with patch('connector.resources.tenant.Client') as fake_client, \
-                patch('connector.resources.tenant.get_name_for_tenant') as fake_name:
+        with patch('connector.v1.resources.tenant.Client') as fake_client, \
+                patch('connector.v1.resources.tenant.get_name_for_tenant') as fake_name:
             fake_name.return_value = 'fake_client'
             instance = fake_client.return_value
             res = self.client.delete('/v1/tenant/123', headers=self.headers)
@@ -110,10 +107,10 @@ class TestTenant(TestCase):
 
     @bypass_auth
     def test_admin_login(self):
-        with patch('connector.resources.tenant.get_name_for_tenant') as fake_name, \
-                patch('connector.resources.tenant.g') as fake_g, \
-                patch('connector.resources.tenant.OA'), \
-                patch('connector.resources.tenant.FbUser') as fake_user:
+        with patch('connector.v1.resources.tenant.get_name_for_tenant') as fake_name, \
+                patch('connector.v1.resources.tenant.g') as fake_g, \
+                patch('connector.v1.resources.tenant.OA'), \
+                patch('connector.v1.resources.tenant.FbUser') as fake_user:
             fake_name.return_value = 'fake_client'
             fake_g.reseller = Reseller('fake_reseller')
             user_instance = fake_user.return_value
@@ -124,10 +121,10 @@ class TestTenant(TestCase):
 
     @bypass_auth
     def test_admin_login_no_user_in_oa(self):
-        with patch('connector.resources.tenant.get_name_for_tenant') as fake_name, \
-                patch('connector.resources.tenant.g') as fake_g, \
-                patch('connector.resources.tenant.OA') as fake_oa, \
-                patch('connector.resources.tenant.FbUser') as fake_user:
+        with patch('connector.v1.resources.tenant.get_name_for_tenant') as fake_name, \
+                patch('connector.v1.resources.tenant.g') as fake_g, \
+                patch('connector.v1.resources.tenant.OA') as fake_oa, \
+                patch('connector.v1.resources.tenant.FbUser') as fake_user:
             fake_name.return_value = 'fake_client'
             fake_g.reseller = Reseller('fake_reseller')
             fake_oa_response = MagicMock()
@@ -140,12 +137,12 @@ class TestTenant(TestCase):
             assert res.status_code == 200
 
     def test_get_name_for_tenant(self):
-        with patch('connector.resources.tenant.OA') as fake_oa:
+        with patch('connector.v1.resources.tenant.OA') as fake_oa:
             fake_oa.get_resource.return_value = {'tenantId': 'fake_client'}
             assert get_name_for_tenant('123-123-123') == 'fake_client'
 
     def test_get_name_for_tenant_fail(self):
-        with patch('connector.resources.tenant.OA') as fake_oa:
+        with patch('connector.v1.resources.tenant.OA') as fake_oa:
             fake_oa.get_resource.return_value = {}
             self.assertRaises(KeyError, get_name_for_tenant, 'broken_tenant')
 
