@@ -3,10 +3,8 @@ import json
 from flask_testing import TestCase
 
 from connector.app import app
-
 from connector.config import Config
-
-from tests.utils import bypass_auth
+from tests.v1.utils import bypass_auth
 
 config = Config()
 

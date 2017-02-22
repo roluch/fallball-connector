@@ -7,7 +7,7 @@ from connector.app import app
 from connector.config import Config
 from connector.fbclient.reseller import Reseller
 from connector.v1.resources.user import make_fallball_user
-from tests.utils import bypass_auth
+from tests.v1.utils import bypass_auth
 
 config = Config()
 

@@ -8,7 +8,7 @@ from connector.config import Config
 from connector.fbclient.reseller import Reseller
 from connector.v1.resources import OACommunicationException
 from connector.v1.resources.tenant import get_name_for_tenant
-from tests.utils import bypass_auth
+from tests.v1.utils import bypass_auth
 
 config = Config()
 
