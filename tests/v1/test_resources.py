@@ -101,7 +101,9 @@ class TestOA(TestCase):
             }
         }
         OA.put_resource(expected_body, transaction=False, retry_num=5)
-        send_request_mock.assert_called_with('put', ANY, body=ANY, transaction=False, retry_num=5)
+        send_request_mock.assert_called_with('put', ANY, body=ANY,
+                                             transaction=False,
+                                             impersonate_as=None, retry_num=5)
         args, kwArgs = send_request_mock.call_args
         body = kwArgs['body']
         assert body == expected_body

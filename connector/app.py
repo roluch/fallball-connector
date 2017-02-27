@@ -20,7 +20,7 @@ app.register_blueprint(api_v1, url_prefix='/v1')
 
 
 @app.route('/')
-def home():
+def home():  # pragma: no cover
     return jsonify({'service': 'fallball_connector', 'host': socket.gethostname()})
 
 
@@ -33,4 +33,4 @@ if __name__ == '__main__':
                            "file and replace PUT_HERE_* values with real "
                            "ones")
 
-    app.run(debug=True if Config().loglevel == 'DEBUG' else False, host='0.0.0.0')
+    app.run(debug=True if Config().loglevel == 'DEBUG' else False, host='0.0.0.0')  # pragma: no cover
