@@ -164,7 +164,7 @@ class TestOA(TestCase):
         }
 
         with self.assertRaises(OACommunicationException):
-            OA.send_request('post', 'fake_path', retry_num=-1)
+             OA.send_request('post', 'fake_path', retry_num=-1)
         status_200_mock = MagicMock()
         status_400_mock = MagicMock()
         status_500_mock = MagicMock()
