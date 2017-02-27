@@ -54,6 +54,9 @@ class TenantList(ConnectorResource):
         parser.add_argument('aps', dest='aps_id', type=parameter_validator('id'),
                             required=True,
                             help='Missing aps.id in request')
+        parser.add_argument('aps', dest='aps_type', type=parameter_validator('type'),
+                            required=True,
+                            help='Missing aps.type in request')
         parser.add_argument(config.diskspace_resource, dest='storage_limit',
                             type=parameter_validator('limit'), required=False)
         parser.add_argument(config.users_resource, dest='users_limit',
@@ -87,11 +90,11 @@ class TenantList(ConnectorResource):
 
         OA.subscribe_on(args.aps_id, 'http://aps-standard.org/core/events/linked',
                         relation='users',
-                        source_type='http://aps.odin.com/app/tn-fallball/tenant/1.2',
+                        source_type=args.aps_type,
                         handler='onUsersChange')
         OA.subscribe_on(args.aps_id, 'http://aps-standard.org/core/events/unlinked',
                         relation='users',
-                        source_type='http://aps.odin.com/app/tn-fallball/tenant/1.2',
+                        source_type=args.aps_type,
                         handler='onUsersChange')
 
         return {'tenantId': client.name}, 201
