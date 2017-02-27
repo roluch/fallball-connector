@@ -33,4 +33,5 @@ if __name__ == '__main__':
                            "file and replace PUT_HERE_* values with real "
                            "ones")
 
-    app.run(debug=True if Config().loglevel == 'DEBUG' else False, host='0.0.0.0')  # pragma: no cover
+    app.run(debug=True if Config().loglevel == 'DEBUG' else False,
+            host='0.0.0.0')  # pragma: no cover
