@@ -184,3 +184,8 @@ class TestOA(TestCase):
                          verify=False)
         # as we have retry_num == 2 request must be called 2 times
         requests_mock.request.assert_has_calls([fake_call, fake_call])
+
+        # check for OACommunicationException if number of attempts exceeded
+        requests_mock.request.side_effect = [status_400_mock, status_400_mock]
+        with self.assertRaises(OACommunicationException):
+            OA.send_request('post', 'fake_path', body=expected_body, retry_num=1)
