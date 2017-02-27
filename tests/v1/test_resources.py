@@ -4,9 +4,11 @@ from flask_testing import TestCase
 
 from mock import patch, ANY, MagicMock, call
 
+from slumber.exceptions import HttpClientError
+
 from connector.app import app
 
-from connector.v1.resources import parameter_validator, OA, OACommunicationException
+from connector.v1.resources import parameter_validator, make_error, ConnectorResource, OA, OACommunicationException
 
 from connector.config import Config
 
@@ -25,6 +27,29 @@ class TestMethods(TestCase):
         with self.assertRaises(ValueError):
             validate({})
         assert validate({'fake_param': 1}) == 1
+
+    def test_make_error(self):
+        e = MagicMock()
+        e.response = MagicMock()
+        e.response.text = 'fake_text"'
+        e.response.status_code = 200
+        message, code = make_error(e)
+        assert message == {'message': 'fake_text'}
+        assert code == 200
+
+
+class TestConnectorResource(TestCase):
+    def create_app(self):
+        app.config.update({'TESTING': True})
+        return app
+
+    @patch('connector.v1.resources.Resource.dispatch_request')
+    @patch('connector.v1.resources.make_error')
+    def test_dispatch_request(self, make_error_mock, flask_dispatch_request_mock):
+        flask_dispatch_request_mock.side_effect = [HttpClientError]
+        connector_resource = ConnectorResource()
+        connector_resource.dispatch_request()
+        make_error_mock.assert_called()
 
 
 class TestOA(TestCase):
