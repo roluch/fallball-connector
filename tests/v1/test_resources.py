@@ -147,7 +147,7 @@ class TestOA(TestCase):
         with self.assertRaises(OACommunicationException):
             OA.send_request('post', 'fake_path', transaction=False)
         OA.send_request('post', 'fake_path', body=expected_body, transaction=True,
-                        impersonateAs='fake_impersonation_resource_id', retry_num=2)
+                        impersonate_as='fake_impersonation_resource_id', retry_num=2)
 
         fake_call = call(method='post',
                          url='fake_path',

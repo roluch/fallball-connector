@@ -128,23 +128,25 @@ class OA(object):
         return OA.send_request('get', rql_request, transaction=transaction, retry_num=retry_num)
 
     @staticmethod
-    def put_resource(representation, transaction=True, impersonateAs=None, retry_num=10):
+    def put_resource(representation, transaction=True, impersonate_as=None, retry_num=10):
         rql_request = 'aps/2/resources'
         return OA.send_request('put', rql_request, body=representation,
-                               transaction=transaction, retry_num=retry_num)
+                               transaction=transaction,
+                               impersonate_as=impersonate_as,
+                               retry_num=retry_num)
 
     @staticmethod
     def get_resources(rql_request, transaction=True, retry_num=10):
         return OA.send_request('get', rql_request, transaction=transaction, retry_num=retry_num)
 
     @staticmethod
-    def send_request(method, path, body=None, transaction=True, impersonateAs=None, retry_num=10):
+    def send_request(method, path, body=None, transaction=True, impersonate_as=None, retry_num=10):
         oa_uri = request.headers.get('aps-controller-uri')
         url = urljoin(oa_uri, path)
 
         headers = {'Content-Type': 'application/json'}
-        if impersonateAs:
-            headers['aps-resource-id'] = impersonateAs
+        if impersonate_as:
+            headers['aps-resource-id'] = impersonate_as
         if transaction:
             headers['aps-transaction-id'] = request.headers.get('aps-transaction-id')
 
