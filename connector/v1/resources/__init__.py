@@ -152,10 +152,11 @@ class OA(object):
 
         data = None if body is None else json.dumps(body)
 
-        retry_num_i = retry_num if retry_num > 0 else 1
+        retry_num = retry_num if retry_num > 0 else 1
 
-        while retry_num_i > 0:
-            retry_num_i -= 1
+        # excluded from coverage due non-deterministic behaviour of a coverage algorithm
+        while retry_num > 0:   # pragma: no cover
+            retry_num -= 1
             resp = requests.request(
                 method=method,
                 url=url,
