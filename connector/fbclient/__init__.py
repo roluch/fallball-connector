@@ -8,12 +8,12 @@ from connector.config import Config
 config = Config()
 
 
-class StorageSchema(Schema):
+class StorageSchema(Schema):  # pragma: no cover
     usage = fields.Int(load_only=True)
     limit = fields.Int()
 
 
-class FallBallAuth(AuthBase):
+class FallBallAuth(AuthBase):  # pragma: no cover
     def __init__(self, token):
         self.token = token
 

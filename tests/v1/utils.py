@@ -6,6 +6,7 @@ config = Config()
 
 
 def bypass_auth(fn):
+    # type: (object) -> object
     def test_wrapper(*args, **kwargs):
         with patch('connector.v1.check_oauth_signature') as signature_mock, \
                 patch('connector.v1.get_client_key') as key_mock, \
@@ -19,3 +20,8 @@ def bypass_auth(fn):
             fn(*args, **kwargs)
 
     return test_wrapper
+
+
+class InlineClass(object):
+    def __init__(self, dict):
+        self.__dict__ = dict

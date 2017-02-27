@@ -1,4 +1,4 @@
-from flask import g, make_response
+from flask import g, make_response, request
 
 from flask_restful import reqparse
 
@@ -9,7 +9,6 @@ from connector.utils import escape_domain_name
 
 from . import (ConnectorResource, Memoize, OA, OACommunicationException,
                parameter_validator, urlify)
-
 
 config = Config()
 
@@ -22,10 +21,28 @@ def get_name_for_tenant(tenant_id):
     return tenant_resource['tenantId']
 
 
+def sync_tenant_usage_with_client(tenant_id, client):
+    client.refresh()
+    tenant = {
+        config.users_resource: {
+            'usage': client.users_by_type['default']
+        },
+        config.diskspace_resource: {
+            'usage': client.storage['usage']
+        },
+        config.devices_resource: {
+            'usage': 0
+        }
+    }
+    OA.send_request('put',
+                    'aps/2/application/tenant/{}'.format(tenant_id),
+                    tenant)
+
+
 def make_default_fallball_admin(client):
     email = 'admin@{client_name}.{reseller_name}.fallball.io'.format(
-            client_name=escape_domain_name(client.name),
-            reseller_name=escape_domain_name(client.reseller.name))
+        client_name=escape_domain_name(client.name),
+        reseller_name=escape_domain_name(client.reseller.name))
 
     user = FbUser(client=client, email=email, admin=True, storage={'limit': 0})
     return user
@@ -68,6 +85,15 @@ class TenantList(ConnectorResource):
             user = make_default_fallball_admin(client)
             user.create()
 
+        OA.subscribe_on(args.aps_id, 'http://aps-standard.org/core/events/linked',
+                        relation='users',
+                        source_type='http://aps.odin.com/app/tn-fallball/tenant/1.2',
+                        handler='onUsersChange')
+        OA.subscribe_on(args.aps_id, 'http://aps-standard.org/core/events/unlinked',
+                        relation='users',
+                        source_type='http://aps.odin.com/app/tn-fallball/tenant/1.2',
+                        handler='onUsersChange')
+
         return {'tenantId': client.name}, 201
 
 
@@ -96,8 +122,10 @@ class Tenant(ConnectorResource):
         args = parser.parse_args()
         company_name = g.company_name = get_name_for_tenant(tenant_id)
         if args.storage_limit:
+            print "TFACTOR - storage limit"
             client = Client(g.reseller, name=company_name,
                             storage={'limit': args.storage_limit})
+            print "TFACTOR - storage limit 2"
             client.update()
         return {}
 
@@ -144,4 +172,16 @@ class TenantUserCreated(ConnectorResource):
 
 class TenantUserRemoved(ConnectorResource):
     def delete(self, tenant_id, user_id):
+        return {}
+
+
+class TenantOnUsersChange(ConnectorResource):
+    def post(self, tenant_id):
+        request.get_json()
+        client = Client(g.reseller, get_name_for_tenant(tenant_id))
+        tenant = OA.get_resource(tenant_id)
+        OA.send_notification('Fallball was assigned for or removed from some users',
+                             accountId=tenant['account']['aps']['id'])
+
+        sync_tenant_usage_with_client(tenant_id, client)
         return {}

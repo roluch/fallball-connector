@@ -31,62 +31,73 @@ class TestUser(TestCase):
         return app
 
     @bypass_auth
-    def test_new_user(self):
-        with patch('connector.v1.resources.user.OA') as fake_oa, \
-                patch('connector.v1.resources.user.FbUser') as fake_user, \
-                patch('connector.v1.resources.user.Client') as fake_client, \
-                patch('connector.v1.resources.user.get_name_for_tenant') as fake_name:
-            user_instance = fake_user.return_value
-            client_instance = fake_client.return_value
-            fake_name.return_value = 'fake_client'
-            user_instance.email = 'user@odin.com'
-            client_instance.storage = {'limit': 100}
-            fake_oa.get_resources.return_value = [self.new_tenant]
-            fake_oa.get_resource.return_value = self.oa_user
-            res = self.client.post('/v1/user', headers=self.headers,
-                                   data=json.dumps(self.user_service))
-            user_instance.create.assert_called()
-            assert res.status_code == 201
+    @patch('connector.v1.resources.user.OA')
+    @patch('connector.v1.resources.user.FbUser')
+    @patch('connector.v1.resources.user.Client')
+    @patch('connector.v1.resources.user.get_name_for_tenant')
+    def test_new_user(self, get_name_for_tenant_mock, FbClient_mock, FbUser_mock, OA_mock):
+        fb_user_mock = FbUser_mock.return_value
+        client_instance = FbClient_mock.return_value
+        get_name_for_tenant_mock.return_value = 'fake_client'
+        fb_user_mock.email = 'user@odin.com'
+        client_instance.storage = {'limit': 100}
+        OA_mock.get_resources.return_value = [self.new_tenant]
+        OA_mock.get_resource.return_value = self.oa_user
+        res = self.client.post('/v1/user', headers=self.headers,
+                               data=json.dumps(self.user_service))
+        fb_user_mock.create.assert_called()
+        assert res.status_code == 201
 
     @bypass_auth
-    def test_delete_user(self):
-        with patch('connector.v1.resources.user.OA') as fake_oa, \
-                patch('connector.v1.resources.user.make_fallball_user') as fake_user:
-            instance = fake_user.return_value
-            instance.client.name = 'fake_client'
-            fake_user = self.user_service
-            fake_user['userId'] = 'user@localhost'
-            fake_oa.get_resource.return_value = fake_user
-            fake_oa.get_resources.return_value = [self.new_tenant]
-            res = self.client.delete('/v1/user/123', headers=self.headers)
-            instance.delete.assert_called()
-            assert res.status_code == 204
+    @patch('connector.v1.resources.user.OA')
+    @patch('connector.v1.resources.user.make_fallball_user')
+    def test_delete_user(self, make_fallball_user_mock, OA_mock):
+        fb_user_mock = make_fallball_user_mock.return_value
+        fb_user_mock.client.name = 'fake_client'
+        make_fallball_user_mock = self.user_service
+        make_fallball_user_mock['userId'] = 'user@localhost'
+        OA_mock.get_resource.return_value = make_fallball_user_mock
+        OA_mock.get_resources.return_value = [self.new_tenant]
+        res = self.client.delete('/v1/user/123', headers=self.headers)
+        fb_user_mock.delete.assert_called()
+        assert res.status_code == 204
 
     @bypass_auth
-    def test_update_user(self):
-        with patch('connector.v1.resources.user.make_fallball_user') as fake_user:
-            instance = fake_user.return_value
-            instance.client.name = 'fake_client'
-            res = self.client.put('/v1/user/123', headers=self.headers, data='{}')
-            assert res.status_code == 200
+    @patch('connector.v1.resources.user.make_fallball_user')
+    def test_update_user(self, make_fallball_user_mock):
+        fb_user_mock = make_fallball_user_mock.return_value
+        fb_user_mock.client.name = 'fake_client'
+        res = self.client.put('/v1/user/123', headers=self.headers, data='{}')
+        assert res.status_code == 200
 
     @bypass_auth
-    def test_user_login(self):
-        with patch('connector.v1.resources.user.make_fallball_user') as fake_user:
-            instance = fake_user.return_value
-            instance.client.name = 'fake_client'
-            instance.login_link.return_value = 'login_link'
-            res = self.client.get('/v1/user/123/login', headers=self.headers)
-            assert b'login_link' in res.data
+    @patch('connector.v1.resources.user.make_fallball_user')
+    def test_update_user_with_profiles(self, make_fallball_user_mock):
+        fb_user_mock = make_fallball_user_mock.return_value
+        fb_user_mock.client.name = 'fake_client'
+        user_payload = json.dumps({
+            'resource': config.gold_users_resource
+        })
+        res = self.client.put('/v1/user/123', headers=self.headers, data=user_payload)
+        assert res.status_code == 200
 
-    def test_make_fallball_user(self):
-        with patch('connector.v1.resources.user.OA') as fake_oa, \
-                patch('connector.v1.resources.user.g') as fake_g, \
-                patch('connector.v1.resources.user.get_name_for_tenant') as fake_name:
-            fake_oa.get_resource.return_value = self.user_service
-            fake_g.reseller = Reseller('fake_reseller')
-            fake_name.return_value = 'fake_client'
-            user = make_fallball_user('123-123-123')
-            assert user.client.name == 'fake_client'
-            assert user.client.reseller.name == 'fake_reseller'
-            assert user.email == 'user@example.com'
+    @bypass_auth
+    @patch('connector.v1.resources.user.make_fallball_user')
+    def test_user_login(self, make_fallball_user_mock):
+        fb_user_mock = make_fallball_user_mock.return_value
+        fb_user_mock.client.name = 'fake_client'
+        fb_user_mock.login_link.return_value = 'login_link'
+        res = self.client.get('/v1/user/123/login', headers=self.headers)
+        assert b'login_link' in res.data
+
+    @patch('connector.v1.resources.user.OA')
+    @patch('connector.v1.resources.user.g')
+    @patch('connector.v1.resources.user.get_name_for_tenant')
+    def test_make_fallball_user(self, get_name_for_tenant_mock, flask_g_mock, OA_mock):
+        OA_mock.get_resource.return_value = self.user_service
+        flask_g_mock.reseller = Reseller('fake_reseller')
+        get_name_for_tenant_mock.return_value = 'fake_client'
+        user = make_fallball_user('123-123-123')
+        assert user.client.name == 'fake_client'
+        assert user.client.reseller.name == 'fake_reseller'
+        assert user.email == 'user@example.com'

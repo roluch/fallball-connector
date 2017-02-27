@@ -3,7 +3,7 @@ from marshmallow import Schema, fields, post_load, pre_dump
 from connector.fbclient import StorageSchema
 
 
-class UserSchema(Schema):
+class UserSchema(Schema):  # pragma: no cover
     email = fields.Email()
     password = fields.Str()
     storage = fields.Nested(StorageSchema)
@@ -19,7 +19,7 @@ class UserSchema(Schema):
         return {k: v for k, v in data.__dict__.items() if v}
 
 
-class User(object):
+class User(object):  # pragma: no cover
     email = None
     password = None
     admin = None

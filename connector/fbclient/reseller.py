@@ -8,7 +8,7 @@ from connector.fbclient import FallBallAuth, StorageSchema
 from connector.fbclient import config
 
 
-class ResellerSchema(Schema):
+class ResellerSchema(Schema):  # pragma: no cover
     name = fields.Str()
     rid = fields.Str()
     token = fields.Str()
@@ -24,7 +24,7 @@ class ResellerSchema(Schema):
         return {k: v for k, v in data.__dict__.items() if v}
 
 
-class Reseller(object):
+class Reseller(object):  # pragma: no cover
     name = None
     rid = None
     token = None

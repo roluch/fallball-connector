@@ -17,7 +17,7 @@ from resources.application import (Application, ApplicationList, ApplicationTena
                                    ApplicationTenantNew, ApplicationUpgrade, HealthCheck,
                                    get_reseller_name)
 from resources.tenant import (Tenant, TenantAdminLogin, TenantDisable, TenantEnable,
-                              TenantList, TenantUserCreated, TenantUserRemoved)
+                              TenantList, TenantUserCreated, TenantUserRemoved, TenantOnUsersChange)
 from resources.user import User, UserList, UserLogin
 
 logger = logging.getLogger(__name__)
@@ -65,7 +65,7 @@ def get_reseller_info():
 @api_bp.before_request
 def before_request():
     g.endpoint = request.endpoint
-    if request.blueprint:
+    if request.blueprint:  # pragma: no cover
         g.endpoint = g.endpoint[len(request.blueprint):].lstrip('.')
 
     reseller_info = get_reseller_info()
@@ -79,7 +79,7 @@ def before_request():
         return
 
     if not check_oauth_signature(request):
-        abort(401)
+        abort(401)  # pragma: no cover
 
     g.auth = reseller_info.auth
 
@@ -87,7 +87,7 @@ def before_request():
     g.reseller.refresh()
 
     if not g.reseller.token and not reseller_info.is_new:
-        abort(403)
+        abort(403)  # pragma: no cover
 
 
 @api_bp.after_request
@@ -111,6 +111,7 @@ resource_routes = {
     '/tenant/<tenant_id>/adminlogin': TenantAdminLogin,
     '/tenant/<tenant_id>/users': TenantUserCreated,
     '/tenant/<tenant_id>/users/<user_id>': TenantUserRemoved,
+    '/tenant/<tenant_id>/onUsersChange': TenantOnUsersChange,
 
     '/user': UserList,
     '/user/<user_id>': User,

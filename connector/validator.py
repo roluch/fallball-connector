@@ -3,7 +3,7 @@ from oauthlib import oauth1 as oauth
 from connector.config import Config
 
 
-class RequestValidator(oauth.RequestValidator):
+class RequestValidator(oauth.RequestValidator):  # pragma: no cover
     enforce_ssl = False
     secret = 'secret'
     key = 'key'
@@ -44,7 +44,7 @@ class RequestValidator(oauth.RequestValidator):
         return request
 
 
-def check_oauth_signature(request):
+def check_oauth_signature(request):  # pragma: no cover
     return RequestValidator().validate_signature(request.url, request.method, request.data,
                                                  request.headers)
 

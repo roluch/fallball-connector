@@ -25,9 +25,9 @@ def home():
 
 
 if __name__ == '__main__':
-    logger.info(" * Using CONFIG_FILE=%s", Config().conf_file)
+    logger.info(" * Using CONFIG_FILE=%s", Config().conf_file)  # pragma: no cover
 
-    if not check_configuration(Config()):
+    if not check_configuration(Config()):  # pragma: no cover
         raise RuntimeError("You can't run your connector with default "
                            "parameters, please update the JSON config "
                            "file and replace PUT_HERE_* values with real "
