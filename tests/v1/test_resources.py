@@ -8,7 +8,8 @@ from slumber.exceptions import HttpClientError
 
 from connector.app import app
 
-from connector.v1.resources import parameter_validator, make_error, ConnectorResource, OA, OACommunicationException
+from connector.v1.resources import parameter_validator, make_error, \
+    ConnectorResource, OA, OACommunicationException
 
 from connector.config import Config
 
