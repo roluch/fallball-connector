@@ -122,10 +122,8 @@ class Tenant(ConnectorResource):
         args = parser.parse_args()
         company_name = g.company_name = get_name_for_tenant(tenant_id)
         if args.storage_limit:
-            print "TFACTOR - storage limit"
             client = Client(g.reseller, name=company_name,
                             storage={'limit': args.storage_limit})
-            print "TFACTOR - storage limit 2"
             client.update()
         return {}
 
