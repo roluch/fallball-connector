@@ -72,8 +72,8 @@ class TestOA(TestCase):
         OA.send_notification('fake_notification')
         OA.send_notification('fake_notification', details='fake_notification_details')
         OA.send_notification('fake_notification', details='fake_notification_details',
-                             messageKeys={'details': 123},
-                             accountId='account123', status='error', userId='user123')
+                             message_keys={'details': 123},
+                             account_id='account123', status='error', user_id='user123')
         send_request_mock.assert_called()
         expected_message = {
             'status': 'error',

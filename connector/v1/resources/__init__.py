@@ -83,8 +83,8 @@ class OA(object):
         return response[0]['aps']['id']
 
     @staticmethod
-    def send_notification(message, details=None, messageKeys=None, accountId=None,
-                          status='ready', userId=None):
+    def send_notification(message, details=None, message_keys=None, account_id=None,
+                          status='ready', user_id=None):
 
         notification = {
             'status': status,
@@ -92,18 +92,18 @@ class OA(object):
                 'message': message
             }
         }
-        if accountId is not None:
-            notification['accountId'] = accountId
-        if userId is not None:
-            notification['userId'] = userId
-        if messageKeys is not None:
-            notification['message']['keys'] = messageKeys
+        if account_id is not None:
+            notification['accountId'] = account_id
+        if user_id is not None:
+            notification['userId'] = user_id
+        if message_keys is not None:
+            notification['message']['keys'] = message_keys
         if details is not None:
             notification['details'] = {
                 'message': details
             }
-            if messageKeys is not None:
-                notification['details']['keys'] = messageKeys
+            if message_keys is not None:
+                notification['details']['keys'] = message_keys
 
         rql_request = 'aps/2/resources/{}/notifications'.format(OA.get_notification_manager())
         return OA.send_request('post', rql_request, notification, transaction=True)
