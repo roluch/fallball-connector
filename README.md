@@ -1,9 +1,9 @@
 # Fallball connector
 
-This is a basic sample connector for the [Fallball Cloud Storage](https://github.com/odin-public/fallball-service).
+This is a basic sample connector for the [Fallball Cloud Storage](https://github.com/ingrammicro/fallball-service).
 
-[![Build Status](https://travis-ci.org/odin-public/fallball-connector.svg?branch=master)](https://travis-ci.org/odin-public/fallball-connector)
-[![Coverage Status](https://coveralls.io/repos/github/odin-public/fallball-connector/badge.svg?branch=master)](https://coveralls.io/github/odin-public/fallball-connector?branch=master)
+[![Build Status](https://travis-ci.org/ingrammicro/fallball-connector.svg?branch=master)](https://travis-ci.org/ingrammicro/fallball-connector)
+[![codecov](https://codecov.io/gh/ingrammicro/fallball-connector/branch/master/graph/badge.svg)](https://codecov.io/gh/ingrammicro/fallball-connector)
 
 ## Running on localhost with tunnel
 
