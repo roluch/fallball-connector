@@ -1,5 +1,9 @@
 [run]
 branch = True
+omit =
+    connector/fbclient/*
+    connector/validator.py
+    connector/v1/__init__.py
 
 [report]
 show_missing = true
@@ -10,14 +14,6 @@ exclude_lines =
     if __name__ == .__main__.:
     loglevel == 'DEBUG'
     except ImportError
-
-[run]
-omit =
-    connector/fbclient/*
-    connector/validator.py
-    connector/v1/__init__.py
-
-
 
 [html]
 directory = coverage_html_report
