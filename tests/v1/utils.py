@@ -20,8 +20,3 @@ def bypass_auth(fn):
             fn(*args, **kwargs)
 
     return test_wrapper
-
-
-class InlineClass(object):
-    def __init__(self, dict):
-        self.__dict__ = dict

@@ -2,7 +2,7 @@ import json
 import os
 
 
-def check_configuration(config):  # pragma: no cover
+def check_configuration(config):
     for item in (
         'fallball_service_url',
         'fallball_service_authorization_token',
@@ -35,7 +35,7 @@ class Config(object):
 
     @staticmethod
     def load():
-        if not os.path.isfile(Config.conf_file):  # pragma: no cover
+        if not os.path.isfile(Config.conf_file):
             raise IOError("Config file not found: {}".format(Config.conf_file))
 
         with open(Config.conf_file, 'r') as c:
@@ -54,6 +54,6 @@ class Config(object):
                     config['fallball_service_authorization_token']
                 Config.oauth_key = config['oauth_key']
                 Config.oauth_signature = config['oauth_signature']
-            except KeyError as e:  # pragma: no cover
+            except KeyError as e:
                 raise RuntimeError(
                     "{} parameter not specified in config.".format(e))

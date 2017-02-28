@@ -20,7 +20,7 @@ class ConnectorLogFormatter(logging.Formatter):
         if isinstance(record.msg, dict):
             resp['message'] = record.msg
         else:
-            resp['message'] = record.getMessage()  # pragma: no cover
+            resp['message'] = record.getMessage()
         resp['time'] = self.formatTime(record, self.datefmt)
         resp['level'] = record.levelname
         resp['reseller_id'] = record.reseller_name

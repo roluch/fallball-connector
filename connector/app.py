@@ -20,18 +20,18 @@ app.register_blueprint(api_v1, url_prefix='/v1')
 
 
 @app.route('/')
-def home():  # pragma: no cover
+def home():
     return jsonify({'service': 'fallball_connector', 'host': socket.gethostname()})
 
 
 if __name__ == '__main__':
-    logger.info(" * Using CONFIG_FILE=%s", Config().conf_file)  # pragma: no cover
+    logger.info(" * Using CONFIG_FILE=%s", Config().conf_file)
 
-    if not check_configuration(Config()):  # pragma: no cover
+    if not check_configuration(Config()):
         raise RuntimeError("You can't run your connector with default "
                            "parameters, please update the JSON config "
                            "file and replace PUT_HERE_* values with real "
                            "ones")
 
     app.run(debug=True if Config().loglevel == 'DEBUG' else False,
-            host='0.0.0.0')  # pragma: no cover
+            host='0.0.0.0')

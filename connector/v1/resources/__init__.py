@@ -6,7 +6,7 @@ import requests
 
 try:
     from functools import reduce
-except ImportError:  # pragma: no cover
+except ImportError:
     pass
 
 try:
@@ -154,8 +154,7 @@ class OA(object):
 
         retry_num = retry_num if retry_num > 0 else 1
 
-        # excluded from coverage due non-deterministic behaviour of a coverage algorithm
-        while retry_num > 0:   # pragma: no cover
+        while retry_num > 0:
             retry_num -= 1
             resp = requests.request(
                 method=method,

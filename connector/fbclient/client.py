@@ -3,12 +3,12 @@ from marshmallow import Schema, fields, post_load, pre_dump
 from connector.fbclient import StorageSchema
 
 
-class UsersByTypeSchema(Schema):  # pragma: no cover
+class UsersByTypeSchema(Schema):
     default = fields.Int(load_only=True)
     gold = fields.Int(load_only=True)
 
 
-class ClientSchema(Schema):  # pragma: no cover
+class ClientSchema(Schema):
     name = fields.Str()
     users_amount = fields.Int(load_only=True)
     users_by_type = fields.Nested(UsersByTypeSchema)
@@ -24,7 +24,7 @@ class ClientSchema(Schema):  # pragma: no cover
         return {k: v for k, v in data.__dict__.items() if v}
 
 
-class Client(object):  # pragma: no cover
+class Client(object):
     name = None
     users_amount = None
     is_integrated = True

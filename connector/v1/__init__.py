@@ -65,7 +65,7 @@ def get_reseller_info():
 @api_bp.before_request
 def before_request():
     g.endpoint = request.endpoint
-    if request.blueprint:  # pragma: no cover
+    if request.blueprint:
         g.endpoint = g.endpoint[len(request.blueprint):].lstrip('.')
 
     reseller_info = get_reseller_info()
@@ -79,7 +79,7 @@ def before_request():
         return
 
     if not check_oauth_signature(request):
-        abort(401)  # pragma: no cover
+        abort(401)
 
     g.auth = reseller_info.auth
 
@@ -87,7 +87,7 @@ def before_request():
     g.reseller.refresh()
 
     if not g.reseller.token and not reseller_info.is_new:
-        abort(403)  # pragma: no cover
+        abort(403)
 
 
 @api_bp.after_request
