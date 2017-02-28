@@ -3,7 +3,7 @@
 This is a basic sample connector for the [Fallball Cloud Storage](https://github.com/ingrammicro/fallball-service).
 
 [![Build Status](https://travis-ci.org/ingrammicro/fallball-connector.svg?branch=master)](https://travis-ci.org/ingrammicro/fallball-connector)
-[![Coverage Status](https://coveralls.io/repos/github/ingrammicro/fallball-connector/badge.svg?branch=master)](https://coveralls.io/github/ingrammicro/fallball-connector?branch=master)
+[![codecov](https://codecov.io/gh/ingrammicro/fallball-connector/branch/master/graph/badge.svg)](https://codecov.io/gh/ingrammicro/fallball-connector)
 
 ## Running on localhost with tunnel
 
