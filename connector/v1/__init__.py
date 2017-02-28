@@ -12,13 +12,14 @@ from connector.utils import log_request, log_response
 from connector.validator import check_oauth_signature, get_client_key
 from connector.fbclient.reseller import Reseller
 
-from resources import urlify
-from resources.application import (Application, ApplicationList, ApplicationTenantDelete,
-                                   ApplicationTenantNew, ApplicationUpgrade, HealthCheck,
-                                   get_reseller_name)
-from resources.tenant import (Tenant, TenantAdminLogin, TenantDisable, TenantEnable,
-                              TenantList, TenantUserCreated, TenantUserRemoved)
-from resources.user import User, UserList, UserLogin
+from connector.v1.resources import urlify
+from connector.v1.resources.application import (Application, ApplicationList,
+                                                ApplicationTenantDelete, ApplicationTenantNew,
+                                                ApplicationUpgrade, HealthCheck,
+                                                get_reseller_name)
+from connector.v1.resources.tenant import (Tenant, TenantAdminLogin, TenantDisable, TenantEnable,
+                                           TenantList, TenantUserCreated, TenantUserRemoved)
+from connector.v1.resources.user import User, UserList, UserLogin
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
