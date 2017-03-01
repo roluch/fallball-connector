@@ -238,7 +238,6 @@ class TestTenant(TestCase):
         }
         self.client.post('/v1/tenant/123/onUsersChange',
                          headers=self.headers, data='{}')
-        OA_mock.send_notification.assert_called()
         OA_mock.send_request.assert_called_with('put',
                                                 'aps/2/application/tenant/123',
                                                 tenant)
