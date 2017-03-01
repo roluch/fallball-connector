@@ -180,9 +180,5 @@ class TenantOnUsersChange(ConnectorResource):
     def post(self, tenant_id):
         request.get_json()
         client = Client(g.reseller, get_name_for_tenant(tenant_id))
-        tenant = OA.get_resource(tenant_id)
-        OA.send_notification('Fallball was assigned for or removed from some users',
-                             account_id=tenant['account']['aps']['id'])
-
         sync_tenant_usage_with_client(tenant_id, client)
         return {}
