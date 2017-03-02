@@ -1,6 +1,5 @@
 import re
 import json
-import urllib
 
 import requests
 
@@ -10,9 +9,10 @@ except ImportError:
     pass
 
 try:
-    from urllib.parse import urljoin
+    from urllib.parse import urljoin, quote as urlquote
 except ImportError:
     from urlparse import urljoin
+    from urllib import quote as urlquote
 
 from flask import g, request
 
@@ -78,7 +78,7 @@ class OA(object):
     @Memoize
     def get_notification_manager():
         rql_request = 'aps/2/resources?implementing({})'.format(
-            urllib.quote('http://www.parallels.com/pa/pa-core-services/notification-manager/1'))
+            urlquote('http://www.parallels.com/pa/pa-core-services/notification-manager/1'))
         response = OA.send_request('get', rql_request, transaction=False)
         return response[0]['aps']['id']
 
