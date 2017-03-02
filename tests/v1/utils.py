@@ -6,6 +6,7 @@ config = Config()
 
 
 def bypass_auth(fn):
+    # type: (object) -> object
     def test_wrapper(*args, **kwargs):
         with patch('connector.v1.check_oauth_signature') as signature_mock, \
                 patch('connector.v1.get_client_key') as key_mock, \

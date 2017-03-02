@@ -18,7 +18,8 @@ from connector.v1.resources.application import (Application, ApplicationList,
                                                 ApplicationUpgrade, HealthCheck,
                                                 get_reseller_name)
 from connector.v1.resources.tenant import (Tenant, TenantAdminLogin, TenantDisable, TenantEnable,
-                                           TenantList, TenantUserCreated, TenantUserRemoved)
+                                           TenantList, TenantUserCreated,
+                                           TenantUserRemoved, TenantOnUsersChange)
 from connector.v1.resources.user import User, UserList, UserLogin
 
 logger = logging.getLogger(__name__)
@@ -112,6 +113,7 @@ resource_routes = {
     '/tenant/<tenant_id>/adminlogin': TenantAdminLogin,
     '/tenant/<tenant_id>/users': TenantUserCreated,
     '/tenant/<tenant_id>/users/<user_id>': TenantUserRemoved,
+    '/tenant/<tenant_id>/onUsersChange': TenantOnUsersChange,
 
     '/user': UserList,
     '/user/<user_id>': User,

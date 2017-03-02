@@ -1,5 +1,6 @@
 import re
 import json
+import urllib
 
 import requests
 
@@ -18,6 +19,17 @@ from flask import g, request
 from flask_restful import Resource
 
 from slumber.exceptions import HttpClientError, HttpServerError
+
+
+class Memoize(object):
+    def __init__(self, function):
+        self.function = function
+        self.memoized = {}
+
+    def __call__(self, *args):
+        if args not in self.memoized:
+            self.memoized[args] = self.function(*args)
+        return self.memoized[args]
 
 
 def parameter_validator(*args):
@@ -63,20 +75,78 @@ class OA(object):
     request_timeout = 50
 
     @staticmethod
+    @Memoize
+    def get_notification_manager():
+        rql_request = 'aps/2/resources?implementing({})'.format(
+            urllib.quote('http://www.parallels.com/pa/pa-core-services/notification-manager/1'))
+        response = OA.send_request('get', rql_request, transaction=False)
+        return response[0]['aps']['id']
+
+    @staticmethod
+    def send_notification(message, details=None, message_keys=None, account_id=None,
+                          status='ready', user_id=None):
+
+        notification = {
+            'status': status,
+            'message': {
+                'message': message
+            }
+        }
+        if account_id is not None:
+            notification['accountId'] = account_id
+        if user_id is not None:
+            notification['userId'] = user_id
+        if message_keys is not None:
+            notification['message']['keys'] = message_keys
+        if details is not None:
+            notification['details'] = {
+                'message': details
+            }
+            if message_keys is not None:
+                notification['details']['keys'] = message_keys
+
+        rql_request = 'aps/2/resources/{}/notifications'.format(OA.get_notification_manager())
+        return OA.send_request('post', rql_request, notification, transaction=True)
+
+    @staticmethod
+    def subscribe_on(resource_id='', event_type='', handler='', relation='',
+                     source_type=''):
+        subscription = {
+            'event': event_type,
+            'source': {
+                'type': source_type
+            },
+            'relation': relation,
+            'handler': handler
+        }
+        rql_request = 'aps/2/resources/{}/aps/subscriptions'.format(resource_id)
+        return OA.send_request('post', rql_request, subscription)
+
+    @staticmethod
     def get_resource(resource_id, transaction=True, retry_num=10):
         rql_request = 'aps/2/resources/{}'.format(resource_id)
         return OA.send_request('get', rql_request, transaction=transaction, retry_num=retry_num)
+
+    @staticmethod
+    def put_resource(representation, transaction=True, impersonate_as=None, retry_num=10):
+        rql_request = 'aps/2/resources'
+        return OA.send_request('put', rql_request, body=representation,
+                               transaction=transaction,
+                               impersonate_as=impersonate_as,
+                               retry_num=retry_num)
 
     @staticmethod
     def get_resources(rql_request, transaction=True, retry_num=10):
         return OA.send_request('get', rql_request, transaction=transaction, retry_num=retry_num)
 
     @staticmethod
-    def send_request(method, path, body=None, transaction=True, retry_num=10):
+    def send_request(method, path, body=None, transaction=True, impersonate_as=None, retry_num=10):
         oa_uri = request.headers.get('aps-controller-uri')
         url = urljoin(oa_uri, path)
 
         headers = {'Content-Type': 'application/json'}
+        if impersonate_as:
+            headers['aps-resource-id'] = impersonate_as
         if transaction:
             headers['aps-transaction-id'] = request.headers.get('aps-transaction-id')
 
@@ -102,14 +172,3 @@ class OA(object):
                 raise OACommunicationException(resp)
 
         raise OACommunicationException(resp)
-
-
-class Memoize(object):
-    def __init__(self, function):
-        self.function = function
-        self.memoized = {}
-
-    def __call__(self, *args):
-        if args not in self.memoized:
-            self.memoized[args] = self.function(*args)
-        return self.memoized[args]

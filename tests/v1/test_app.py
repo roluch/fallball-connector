@@ -2,7 +2,10 @@ import json
 
 from flask_testing import TestCase
 
+from mock import patch
+
 from connector.app import app
+from connector.v1.resources.application import get_reseller_name
 from connector.config import Config
 from tests.v1.utils import bypass_auth
 
@@ -58,3 +61,9 @@ class TestApp(TestCase):
     def test_app_upgrade(self):
         res = self.client.post('/v1/app/123/upgrade?version=100-500', headers=self.headers)
         assert res.status_code == 200
+
+    @bypass_auth
+    @patch('connector.v1.resources.application.Reseller')
+    def test_get_reseller_name(self, Reseller_mock):
+        name = get_reseller_name(123)
+        assert name is None

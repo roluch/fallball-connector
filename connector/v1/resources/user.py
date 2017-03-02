@@ -51,6 +51,7 @@ class UserList(ConnectorResource):
         user = FbUser(client, email=oa_user['email'], admin=oa_user['isAccountAdmin'],
                       storage={'limit': limit},
                       profile_type=user_types.get(args.user_type, 'default'))
+
         user.create()
 
         return {'userId': user.email}, 201
