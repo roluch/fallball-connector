@@ -1,7 +1,7 @@
 from flask_testing import TestCase
 from connector.app import app
 from connector.config import check_configuration, Config
-from utils import InlineClass
+from tests.utils import InlineClass
 
 
 class TestConfig(TestCase):
@@ -36,7 +36,7 @@ class TestConfig(TestCase):
             'default_user_limit': 10,
             'gold_user_limit': 15
         })
-        for attr, value in config.__dict__.iteritems():
+        for attr, value in config.__dict__.items():
             assert value == getattr(Config, attr)
 
         Config.conf_file = 'tests/fake_config_invalid.json'
