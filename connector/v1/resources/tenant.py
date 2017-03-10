@@ -100,8 +100,6 @@ def analyze_service_error(data):
                         {
                             'propertyName': 'accountinfo.techContact.email',
                             'message': {
-
-
                                 'text': "Dots are not allowed in local parts of email addresses",
                                 'textLocalized': {
                                     'ru': u"Часть адреса электронной почты до знака @ "
