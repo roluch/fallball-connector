@@ -2,6 +2,7 @@ import json
 
 from flask_testing import TestCase
 from mock import MagicMock, patch, DEFAULT
+from slumber.exceptions import HttpClientError
 
 from connector.app import app
 from connector.config import Config
@@ -22,17 +23,44 @@ class TestTenant(TestCase):
                         'aps-identity-id': '123-123-123',
                         'aps-controller-uri': 'https://localhost'}
         self.new_tenant = \
-            json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123'},
+            json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
+                                'status': 'aps:provisioning'},
                         config.diskspace_resource: {'limit': 1000},
+                        'accountinfo': {'techContact': {'email': 'new-tenant@fallball.io'}},
+                        'oaSubscription': {'aps': {'id': 555}},
+                        'oaAccount': {'aps': {'id': 555}}})
+        self.new_tenant_no_email = \
+            json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
+                                'status': 'aps:provisioning'},
+                        config.diskspace_resource: {'limit': 1000},
+                        'accountinfo': {'techContact': {}},
                         'oaSubscription': {'aps': {'id': 555}},
                         'oaAccount': {'aps': {'id': 555}}})
         self.fb_client_with_users = \
-            json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123'},
+            json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
+                                'status': 'aps:provisioning'},
                         config.users_resource: {'limit': 10},
+                        'accountinfo': {'techContact': {'email': 'new-tenant@fallball.io'}},
                         'oaSubscription': {'aps': {'id': 555}},
                         'oaAccount': {'aps': {'id': 555}}})
         self.diskless_tenant = \
-            json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123'},
+            json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
+                                'status': 'aps:provisioning'},
+                        'accountinfo': {'techContact': {'email': 'new-tenant@fallball.io'}},
+                        'oaSubscription': {'aps': {'id': 555}},
+                        'oaAccount': {'aps': {'id': 555}}})
+        self.reprovisioning_tenant = \
+            json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
+                                'status': 'aps:provisioning'},
+                        'accountinfo': {'techContact': {'email': 'new-tenant@fallball.io'}},
+                        'status': 'activationRequired',
+                        'oaSubscription': {'aps': {'id': 555}},
+                        'oaAccount': {'aps': {'id': 555}}})
+        self.reprovisioned_tenant = \
+            json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
+                                'status': 'aps:ready'},
+                        'accountinfo': {'techContact': {'email': 'new-tenant@fallball.io'}},
+                        'status': 'reprovisioned',
                         'oaSubscription': {'aps': {'id': 555}},
                         'oaAccount': {'aps': {'id': 555}}})
         self.users_changed_notification = '{}'
@@ -51,6 +79,85 @@ class TestTenant(TestCase):
         res = self.client.post('/v1/tenant', headers=self.headers, data=self.new_tenant)
         fb_client_mock.create.assert_called()
         assert res.status_code == 201
+
+    @bypass_auth
+    @patch('connector.v1.resources.tenant.OA')
+    @patch('connector.v1.resources.tenant.Client')
+    def test_create_reprovisioned_tenant(self, FbClient_mock, OA_mock):
+        fb_client_mock = FbClient_mock.return_value
+        fb_client_mock.name = 'fake_company_name'
+        fb_client_mock.reseller = Reseller('fake_reseller')
+        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company'},
+                                            {'subscriptionId': 555}]
+        res = self.client.post('/v1/tenant', headers=self.headers, data=self.reprovisioned_tenant)
+        fb_client_mock.create.assert_not_called()
+        assert res.status_code == 201
+
+    @bypass_auth
+    @patch('connector.v1.resources.tenant.OA')
+    @patch('connector.v1.resources.tenant.Client')
+    def test_create_client_reprovision_not_completed(self, FbClient_mock, OA_mock):
+        fb_client_mock = FbClient_mock.return_value
+        fb_client_mock.name = 'fake_company_name'
+        fb_client_mock.reseller = Reseller('fake_reseller')
+        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company'},
+                                            {'subscriptionId': 555}]
+        headers = self.headers.copy()
+        headers.update({'Aps-Request-Phase': 'async'})
+        res = self.client.post('/v1/tenant', headers=headers, data=self.reprovisioning_tenant)
+        fb_client_mock.create.assert_not_called()
+        assert res.status_code == 202
+
+    @bypass_auth
+    @patch('connector.v1.resources.tenant.OA')
+    @patch('connector.v1.resources.tenant.Client')
+    def test_new_tenant_no_email(self, FbClient_mock, OA_mock):
+        fb_client_mock = FbClient_mock.return_value
+        fb_client_mock.name = 'fake_company_name'
+        fb_client_mock.reseller = Reseller('fake_reseller')
+        OA_mock.get_resource.side_effect = [
+            {'companyName': 'fake_company', 'techContact': {'email': 'tenant-tech@fallball.io'}},
+            {'subscriptionId': 555}]
+        res = self.client.post('/v1/tenant', headers=self.headers, data=self.new_tenant_no_email)
+        fb_client_mock.create.assert_called()
+        assert res.status_code == 201
+
+    @bypass_auth
+    @patch('connector.v1.resources.tenant.OA')
+    @patch('connector.v1.resources.tenant.Client')
+    def test_new_tenant_recoverable_error(self, FbClient_mock, OA_mock):
+        fb_client_mock = FbClient_mock.return_value
+        fb_client_mock.name = 'fake_company_name'
+        fb_client_mock.reseller = Reseller('fake_reseller')
+        response = MagicMock()
+        response.json.return_value = {'email': 'No dots allowed'}
+        fb_client_mock.create.side_effect = HttpClientError(response=response)
+        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company'},
+                                            {'subscriptionId': 555}]
+        res = self.client.post('/v1/tenant', headers=self.headers, data=self.new_tenant)
+        fb_client_mock.create.assert_called()
+
+        assert res.json['status'] == 'activationRequired'
+        assert res.status_code == 202
+
+    @bypass_auth
+    @patch('connector.v1.resources.tenant.OA')
+    @patch('connector.v1.resources.tenant.Client')
+    def test_new_tenant_unrecoverable_error(self, FbClient_mock, OA_mock):
+        fb_client_mock = FbClient_mock.return_value
+        fb_client_mock.name = 'fake_company_name'
+        fb_client_mock.reseller = Reseller('fake_reseller')
+        response = MagicMock()
+        response.json.return_value = {'unknown_error': 'Something went wrong'}
+        response.text = 'Something went wrong'
+        response.status_code = 400
+        fb_client_mock.create.side_effect = HttpClientError(response=response)
+        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company'},
+                                            {'subscriptionId': 555}]
+        res = self.client.post('/v1/tenant', headers=self.headers, data=self.new_tenant)
+        fb_client_mock.create.assert_called()
+
+        assert res.status_code == 400
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.OA')
@@ -241,3 +348,82 @@ class TestTenant(TestCase):
         OA_mock.send_request.assert_called_with('put',
                                                 'aps/2/application/tenant/123',
                                                 tenant)
+
+    @bypass_auth
+    @patch('connector.v1.resources.tenant.FbUser')
+    @patch('connector.v1.resources.tenant.OA')
+    @patch('connector.v1.resources.tenant.g')
+    @patch('connector.v1.resources.tenant.get_name_for_tenant')
+    @patch('connector.v1.resources.tenant.Client')
+    def test_tenant_reprovision(self, FbClient_mock,
+                                get_name_for_fb_client_mock, flask_g_mock,
+                                OA_mock, FbUser_mock):
+        fb_client_mock = FbClient_mock.return_value
+        fb_client_mock.name = 'fake_company_name'
+        fb_client_mock.reseller = Reseller('fake_reseller')
+        OA_mock.get_resource.side_effect = [json.loads(self.reprovisioning_tenant),
+                                            {'companyName': 'fake_company'},
+                                            {'subscriptionId': 555}]
+
+        resp = self.client.post('/v1/tenant/123/reprovision', headers=self.headers,
+                                data=self.reprovisioning_tenant)
+
+        tenant_body = {'status': 'reprovisioned',
+                       'accountinfo': {'techContact': {'email': 'new-tenant@fallball.io'}},
+                       'statusData': {},
+                       'tenantId': 'fake_company_name'}
+        OA_mock.send_request.assert_called_with('PUT', '/aps/2/application/tenant/123', tenant_body)
+        self.assertEqual(resp.status_code, 200)
+
+    @bypass_auth
+    @patch('connector.v1.resources.tenant.provision_fallball_client')
+    @patch('connector.v1.resources.tenant.FbUser')
+    @patch('connector.v1.resources.tenant.OA')
+    @patch('connector.v1.resources.tenant.g')
+    @patch('connector.v1.resources.tenant.get_name_for_tenant')
+    @patch('connector.v1.resources.tenant.Client')
+    def test_tenant_reprovision_unsuccessful(self, FbClient_mock,
+                                             get_name_for_fb_client_mock, flask_g_mock,
+                                             OA_mock, FbUser_mock, provision_fb_client_mock):
+        fb_client_mock = FbClient_mock.return_value
+        fb_client_mock.name = 'fake_company_name'
+        fb_client_mock.reseller = Reseller('fake_reseller')
+        provision_result_mock = provision_fb_client_mock.return_value
+        provision_result_mock.status_code = 202
+        provision_result_mock.body = {'statusData': {}}
+        OA_mock.get_resource.side_effect = [json.loads(self.reprovisioning_tenant),
+                                            {'companyName': 'fake_company'},
+                                            {'subscriptionId': 555}]
+
+        resp = self.client.post('/v1/tenant/123/reprovision', headers=self.headers,
+                                data=self.reprovisioning_tenant)
+
+        OA_mock.send_request.assert_called_with('PUT',
+                                                '/aps/2/application/tenant/123',
+                                                {'statusData': {}})
+        self.assertEqual(resp.status_code, 200)
+
+    @bypass_auth
+    @patch('connector.v1.resources.tenant.provision_fallball_client')
+    @patch('connector.v1.resources.tenant.FbUser')
+    @patch('connector.v1.resources.tenant.OA')
+    @patch('connector.v1.resources.tenant.g')
+    @patch('connector.v1.resources.tenant.get_name_for_tenant')
+    @patch('connector.v1.resources.tenant.Client')
+    def test_tenant_reprovision_reprovisioned(self, FbClient_mock,
+                                              get_name_for_fb_client_mock, flask_g_mock,
+                                              OA_mock, FbUser_mock, provision_fb_client_mock):
+        fb_client_mock = FbClient_mock.return_value
+        fb_client_mock.name = 'fake_company_name'
+        fb_client_mock.reseller = Reseller('fake_reseller')
+        provision_result_mock = provision_fb_client_mock.return_value
+        provision_result_mock.status_code = 202
+        provision_result_mock.body = {'statusData': {}}
+        OA_mock.get_resource.side_effect = [json.loads(self.reprovisioned_tenant),
+                                            {'companyName': 'fake_company'},
+                                            {'subscriptionId': 555}]
+
+        resp = self.client.post('/v1/tenant/123/reprovision', headers=self.headers,
+                                data=self.reprovisioned_tenant)
+
+        self.assertEqual(resp.status_code, 400)
