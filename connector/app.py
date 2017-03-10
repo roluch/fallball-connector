@@ -34,4 +34,4 @@ if __name__ == '__main__':
                            "ones")
 
     app.run(debug=True if Config().loglevel == 'DEBUG' else False,
-            host='0.0.0.0')
+            host='0.0.0.0', threaded=True)
