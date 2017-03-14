@@ -1,6 +1,7 @@
 import logging
 import sys
 import json
+import os
 import re
 
 from flask import g
@@ -24,34 +25,61 @@ class ConnectorLogFormatter(logging.Formatter):
         resp['time'] = self.formatTime(record, self.datefmt)
         resp['level'] = record.levelname
         resp['reseller_id'] = record.reseller_name
+
+        if isinstance(record.msg, dict):
+            rec_type = record.msg.pop('type', None)
+            if 'data' in record.msg:
+                try:
+                    record.msg['data'] = json.loads(record.msg['data'])
+                except:
+                    pass
+        else:
+            rec_type = None
+
+        if rec_type:
+            return '{}: {}'.format(rec_type.upper(), json.dumps(resp, indent=4))
+
+        return json.dumps(resp, indent=4)
+
+
+class JsonLogFormatter(logging.Formatter):
+    def format(self, record):
+        resp = {}
+        if isinstance(record.msg, dict):
+            resp['message'] = record.msg
+        else:
+            resp['message'] = record.getMessage()
+        resp['time'] = self.formatTime(record, self.datefmt)
+        resp['level'] = record.levelname
+        resp['reseller_id'] = record.reseller_name
         return json.dumps(resp)
 
 
 stream = logging.StreamHandler(sys.stdout)
 logger.addFilter(ResellerNameFilter())
-formatter = ConnectorLogFormatter()
+formatter = JsonLogFormatter() if os.getenv('JSON_LOG') else ConnectorLogFormatter()
 stream.setFormatter(formatter)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(stream)
 
 
 def log_request(request):
-    logger.info({"type": "request",
-                 "app": "fallball_connector",
-                 "method": request.method,
-                 "url": request.url,
-                 "headers": dict(request.headers),
-                 "data": request.data.decode('utf-8')})
+    logger.debug({"type": "request",
+                  "app": "fallball_connector",
+                  "method": request.method,
+                  "url": request.url,
+                  "headers": dict(request.headers),
+                  "data": request.data.decode('utf-8')})
 
 
 def log_response(response):
-    logger.info({"type": "response",
-                 "app": "fallball_connector",
-                 "status_code": response.status_code,
-                 "status": response.status,
-                 "headers": dict(response.headers),
-                 "data": response.data.decode('utf-8'),
-                 "company": g.company_name})
+    logger.debug({"type": "response",
+                  "app": "fallball_connector",
+                  "status_code": response.status_code,
+                  "status": response.status,
+                  "headers": dict(response.headers),
+                  "data": response.data.decode('utf-8'),
+                  "company": g.company_name})
 
 
 def escape_domain_name(name):

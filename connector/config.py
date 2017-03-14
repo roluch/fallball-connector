@@ -17,7 +17,7 @@ def check_configuration(config):
 
 class Config(object):
     conf_file = os.environ.get('CONFIG_FILE', './config.json')
-    loglevel = None
+    debug = False
     diskspace_resource = None
     default_user_limit = None
     gold_user_limit = None
@@ -43,7 +43,7 @@ class Config(object):
             Config.default_user_limit = config.get('default_user_limit', 10)
             Config.gold_user_limit = config.get('gold_user_limit', 15)
             Config.gold_users_resource = config.get('gold_users_resource', 'GOLD_USERS')
-            Config.loglevel = config.get('loglevel', 'DEBUG')
+            Config.debug = bool(config.get('debug', False))
 
             try:
                 Config.diskspace_resource = config['diskspace_resource']
