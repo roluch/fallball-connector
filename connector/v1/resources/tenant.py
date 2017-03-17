@@ -60,21 +60,25 @@ def get_tenant_args():
 
     parser.add_argument('aps', dest='aps_id', type=parameter_validator('id'), required=True,
                         help='Missing aps.id in request')
+    parser.add_argument('aps', dest='sub_id', type=parameter_validator('subscription'),
+                        required=True, help='Missing aps.subscription in request')
     parser.add_argument('aps', dest='aps_type', type=parameter_validator('type'), required=True,
                         help='Missing aps.type in request')
     parser.add_argument('aps', dest='aps_status', type=parameter_validator('status'))
+
+    parser.add_argument('account', dest='acc_id', type=parameter_validator('aps', 'id'),
+                        required=True, help='Missing link to account in request')
+
     parser.add_argument('accountinfo', dest='account_info', type=dict)
+    parser.add_argument('status', type=str)
+    parser.add_argument('statusData', dest='status_data', type=dict)
+
     parser.add_argument(config.diskspace_resource, dest='storage_limit',
                         type=parameter_validator('limit'))
     parser.add_argument(config.users_resource, dest='users_limit',
                         type=parameter_validator('limit'))
     parser.add_argument(config.gold_users_resource, dest='gold_users_limit',
                         type=parameter_validator('limit'))
-    parser.add_argument('oaSubscription', dest='sub_id', type=parameter_validator('aps', 'id'),
-                        required=True, help='Missing link to subscription in request')
-    parser.add_argument('oaAccount', dest='acc_id', type=parameter_validator('aps', 'id'),
-                        required=True, help='Missing link to account in request')
-    parser.add_argument('status', type=str)
 
     return parser.parse_args()
 
@@ -113,6 +117,21 @@ def analyze_service_error(data):
     return AnalysisResult(False, {})
 
 
+def report_error(message):
+    return {'status': 'error',
+            'statusData': {
+                'code': 'ActivationData',
+                'messages': [
+                    {
+                        'type': 'error',
+                        'text': '{}'.format(message),
+                    }
+
+                ],
+                'perPropertyData': []
+            }}
+
+
 def provision_fallball_client(args):
     user_integration_enabled = bool(args.users_limit) or bool(args.gold_users_limit)
 
@@ -123,6 +142,14 @@ def provision_fallball_client(args):
         admin_email = args.account_info['techContact']['email']
     else:
         admin_email = company_info['techContact']['email']
+
+    info = {
+        'accountinfo': {
+            'techContact': {
+                'email': admin_email
+            }
+        }
+    }
 
     sub_id = OA.get_resource(args.sub_id)['subscriptionId']
     company_name = '{}-sub{}'.format(company_name if company_name else 'Unnamed', sub_id)
@@ -138,10 +165,16 @@ def provision_fallball_client(args):
         resp = e.response.json()
         result = analyze_service_error(resp)
         if result.recoverable:
-            return ProvisioningResult(result.data, 202,
+            info.update(result.data)
+            return ProvisioningResult(info, 202,
                                       {'Aps-Info': "Additional information required to complete "
                                                    "provisioning"})
-        raise e
+        else:
+            info = report_error(resp)
+            return ProvisioningResult(info, 500, {})
+    except Exception as e:
+        info = report_error(str(e))
+        return ProvisioningResult(info, 500, {})
 
     if not user_integration_enabled:
         user = make_default_fallball_admin(client)
@@ -156,7 +189,14 @@ def provision_fallball_client(args):
                     source_type=args.aps_type,
                     handler='onUsersChange')
 
-    return ProvisioningResult({'tenantId': client.name}, 201, None)
+    status = 'reprovisioned' if args.status else ''
+
+    return ProvisioningResult({'tenantId': client.name,
+                               'status': status,
+                               'statusData': {
+                                   'messages': [],
+                                   'perPropertyData': []
+                               }}, 201, None)
 
 
 class TenantList(ConnectorResource):
@@ -166,7 +206,7 @@ class TenantList(ConnectorResource):
 
         if args.status == 'reprovisioned':
             return {}, 201
-        elif phase == 'async':
+        elif phase == 'async' and args.status != 'error':
             return {}, 202, {'Aps-Info': "Additional information required to complete provisioning"}
 
         return provision_fallball_client(args)
@@ -276,9 +316,7 @@ class TenantReprovision(ConnectorResource):
             }
             body.update(result.body)
         else:
-            body = {
-                'statusData': result.body['statusData']
-            }
+            body = result.body
 
         OA.send_request('PUT', path, body)
 
