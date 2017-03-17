@@ -2,7 +2,7 @@ import json
 
 from flask_testing import TestCase
 from mock import MagicMock, patch, DEFAULT
-from slumber.exceptions import HttpClientError
+from slumber.exceptions import HttpClientError, HttpServerError
 
 from connector.app import app
 from connector.config import Config
@@ -24,45 +24,45 @@ class TestTenant(TestCase):
                         'aps-controller-uri': 'https://localhost'}
         self.new_tenant = \
             json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
-                                'status': 'aps:provisioning'},
+                                'status': 'aps:provisioning',
+                                'subscription': '555'},
                         config.diskspace_resource: {'limit': 1000},
                         'accountinfo': {'techContact': {'email': 'new-tenant@fallball.io'}},
-                        'oaSubscription': {'aps': {'id': 555}},
-                        'oaAccount': {'aps': {'id': 555}}})
+                        'account': {'aps': {'id': 555}}})
         self.new_tenant_no_email = \
             json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
-                                'status': 'aps:provisioning'},
+                                'status': 'aps:provisioning',
+                                'subscription': '555'},
                         config.diskspace_resource: {'limit': 1000},
                         'accountinfo': {'techContact': {}},
-                        'oaSubscription': {'aps': {'id': 555}},
-                        'oaAccount': {'aps': {'id': 555}}})
+                        'account': {'aps': {'id': 555}}})
         self.fb_client_with_users = \
             json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
-                                'status': 'aps:provisioning'},
+                                'status': 'aps:provisioning',
+                                'subscription': '555'},
                         config.users_resource: {'limit': 10},
                         'accountinfo': {'techContact': {'email': 'new-tenant@fallball.io'}},
-                        'oaSubscription': {'aps': {'id': 555}},
-                        'oaAccount': {'aps': {'id': 555}}})
+                        'account': {'aps': {'id': 555}}})
         self.diskless_tenant = \
             json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
-                                'status': 'aps:provisioning'},
+                                'status': 'aps:provisioning',
+                                'subscription': '555'},
                         'accountinfo': {'techContact': {'email': 'new-tenant@fallball.io'}},
-                        'oaSubscription': {'aps': {'id': 555}},
-                        'oaAccount': {'aps': {'id': 555}}})
+                        'account': {'aps': {'id': 555}}})
         self.reprovisioning_tenant = \
             json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
-                                'status': 'aps:provisioning'},
+                                'status': 'aps:provisioning',
+                                'subscription': '555'},
                         'accountinfo': {'techContact': {'email': 'new-tenant@fallball.io'}},
                         'status': 'activationRequired',
-                        'oaSubscription': {'aps': {'id': 555}},
-                        'oaAccount': {'aps': {'id': 555}}})
+                        'account': {'aps': {'id': 555}}})
         self.reprovisioned_tenant = \
             json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
-                                'status': 'aps:ready'},
+                                'status': 'aps:ready',
+                                'subscription': '555'},
                         'accountinfo': {'techContact': {'email': 'new-tenant@fallball.io'}},
                         'status': 'reprovisioned',
-                        'oaSubscription': {'aps': {'id': 555}},
-                        'oaAccount': {'aps': {'id': 555}}})
+                        'account': {'aps': {'id': 555}}})
         self.users_changed_notification = '{}'
 
         return app
@@ -157,7 +157,26 @@ class TestTenant(TestCase):
         res = self.client.post('/v1/tenant', headers=self.headers, data=self.new_tenant)
         fb_client_mock.create.assert_called()
 
-        assert res.status_code == 400
+        assert res.status_code == 500
+
+    @bypass_auth
+    @patch('connector.v1.resources.tenant.OA')
+    @patch('connector.v1.resources.tenant.Client')
+    def test_new_tenant_unexpected_error(self, FbClient_mock, OA_mock):
+        fb_client_mock = FbClient_mock.return_value
+        fb_client_mock.name = 'fake_company_name'
+        fb_client_mock.reseller = Reseller('fake_reseller')
+        response = MagicMock()
+        response.json.return_value = {'unknown_error': 'Something went wrong'}
+        response.text = 'Something went wrong'
+        response.status_code = 500
+        fb_client_mock.create.side_effect = HttpServerError(response=response)
+        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company'},
+                                            {'subscriptionId': 555}]
+        res = self.client.post('/v1/tenant', headers=self.headers, data=self.new_tenant)
+        fb_client_mock.create.assert_called()
+
+        assert res.status_code == 500
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.OA')
@@ -370,7 +389,7 @@ class TestTenant(TestCase):
 
         tenant_body = {'status': 'reprovisioned',
                        'accountinfo': {'techContact': {'email': 'new-tenant@fallball.io'}},
-                       'statusData': {},
+                       'statusData': {'messages': [], 'perPropertyData': []},
                        'tenantId': 'fake_company_name'}
         OA_mock.send_request.assert_called_with('PUT', '/aps/2/application/tenant/123', tenant_body)
         self.assertEqual(resp.status_code, 200)
