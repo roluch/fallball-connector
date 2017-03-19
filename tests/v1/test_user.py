@@ -17,7 +17,8 @@ class TestUser(TestCase):
         app.config.update({'TESTING': True})
         self.client = app.test_client()
         self.new_tenant = {'aps': {'type': 'http://new.app', 'id': '123-123-123'}}
-        self.oa_user = {'email': 'user@odin.com', 'isAccountAdmin': True}
+        self.oa_user = {'email': 'user@odin.com', 'isAccountAdmin': True,
+                        'displayName': 'User Name', 'aps': {'id': '123'}}
         self.user_service = {'aps': {'type': 'http://new.app/user-service/1.0'},
                              'tenant': {'aps': {'id': '123'}},
                              'userId': 'user@example.com',
@@ -57,27 +58,31 @@ class TestUser(TestCase):
         make_fallball_user_mock = self.user_service
         make_fallball_user_mock['userId'] = 'user@localhost'
         OA_mock.get_resource.return_value = make_fallball_user_mock
-        OA_mock.get_resources.return_value = [self.new_tenant]
+        OA_mock.get_resources.side_effect = [[self.oa_user], [self.new_tenant]]
         res = self.client.delete('/v1/user/123', headers=self.headers)
         fb_user_mock.delete.assert_called()
         assert res.status_code == 204
 
     @bypass_auth
+    @patch('connector.v1.resources.user.OA')
     @patch('connector.v1.resources.user.make_fallball_user')
-    def test_update_user(self, make_fallball_user_mock):
+    def test_update_user(self, make_fallball_user_mock, OA_mock):
         fb_user_mock = make_fallball_user_mock.return_value
         fb_user_mock.client.name = 'fake_client'
+        OA_mock.get_resources.return_value = [self.oa_user]
         res = self.client.put('/v1/user/123', headers=self.headers, data='{}')
         assert res.status_code == 200
 
     @bypass_auth
+    @patch('connector.v1.resources.user.OA')
     @patch('connector.v1.resources.user.make_fallball_user')
-    def test_update_user_with_profiles(self, make_fallball_user_mock):
+    def test_update_user_with_profiles(self, make_fallball_user_mock, OA_mock):
         fb_user_mock = make_fallball_user_mock.return_value
         fb_user_mock.client.name = 'fake_client'
         user_payload = json.dumps({
             'resource': config.gold_users_resource
         })
+        OA_mock.get_resources.return_value = [self.oa_user]
         res = self.client.put('/v1/user/123', headers=self.headers, data=user_payload)
         assert res.status_code == 200
 

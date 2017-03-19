@@ -3,12 +3,15 @@ import json
 from flask_testing import TestCase
 from mock import MagicMock, patch, DEFAULT
 
+
 from connector.app import app
 from connector.config import Config
 from connector.fbclient.reseller import Reseller
 from connector.v1.resources import OACommunicationException
 from connector.v1.resources.tenant import get_name_for_tenant
 from tests.v1.utils import bypass_auth
+
+from connector.v1.resources.tenant import config as config_from_tenant
 
 config = Config()
 
@@ -36,6 +39,10 @@ class TestTenant(TestCase):
                         'oaSubscription': {'aps': {'id': 555}},
                         'oaAccount': {'aps': {'id': 555}}})
         self.users_changed_notification = '{}'
+        self.config_without_gold = Config()
+        self.config_without_gold.gold_users_resource = ''
+        print('TFACTOR without gold {}'.format(self.config_without_gold.gold_users_resource))
+        self.config_with_gold = Config()
 
         return app
 
@@ -82,6 +89,8 @@ class TestTenant(TestCase):
     @patch('connector.v1.resources.tenant.get_name_for_tenant')
     @patch('connector.v1.resources.tenant.Client')
     def test_resource_usage(self, FbClient_mock, get_name_for_fb_client_mock):
+        orig_gold_users_resource = config_from_tenant.gold_users_resource
+        config_from_tenant.gold_users_resource = ''
         fb_client_mock = FbClient_mock.return_value
         get_name_for_fb_client_mock.return_value = 'fake_client'
         fb_client_mock.users_by_type = {
@@ -94,6 +103,11 @@ class TestTenant(TestCase):
         assert data[config.diskspace_resource]['usage'] == 1
         assert data[config.users_resource]['usage'] == 1
         assert res.status_code == 200
+        config_from_tenant.gold_users_resource = orig_gold_users_resource
+        fb_client_mock.users_by_type['gold'] = 2
+        res = self.client.get('/v1/tenant/123', headers=self.headers)
+        data = res.json
+        assert data[config.gold_users_resource]['usage'] == 2
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.get_name_for_tenant')
@@ -220,9 +234,10 @@ class TestTenant(TestCase):
         fb_client_mock = FbClient_mock.return_value
         get_name_for_fb_client_mock.return_value = 'fake_client'
         flask_g_mock.reseller = Reseller('fake_reseller')
+        orig_gold_users_resource = config_from_tenant.gold_users_resource
+        config_from_tenant.gold_users_resource = ''
         fb_client_mock.users_by_type = {
-            'default': 1,
-            'gold': 2
+            'default': 1
         }
         fb_client_mock.storage = {'usage': 1}
         tenant = {
@@ -236,6 +251,19 @@ class TestTenant(TestCase):
                 'usage': 1
             }
         }
+        self.client.post('/v1/tenant/123/onUsersChange',
+                         headers=self.headers, data='{}')
+        OA_mock.send_request.assert_called_with('put',
+                                                'aps/2/application/tenant/123',
+                                                tenant)
+
+        config_from_tenant.gold_users_resource = orig_gold_users_resource
+        fb_client_mock.users_by_type['gold'] = 2
+
+        tenant[config.gold_users_resource] = {
+          'usage': 2
+        }
+
         self.client.post('/v1/tenant/123/onUsersChange',
                          headers=self.headers, data='{}')
         OA_mock.send_request.assert_called_with('put',

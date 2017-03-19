@@ -5,7 +5,7 @@ from flask_restful import reqparse
 from connector.config import Config
 from connector.fbclient.user import User as FbUser
 from connector.fbclient.client import Client
-from connector.utils import escape_domain_name
+from connector.utils import escape_domain_name, logger
 
 from . import (ConnectorResource, Memoize, OA, OACommunicationException,
                parameter_validator, urlify)
@@ -34,6 +34,16 @@ def sync_tenant_usage_with_client(tenant_id, client):
             'usage': 0
         }
     }
+
+    user_profiles_supported = bool(config.gold_users_resource)
+    logger.debug('TFACTOR user profiles not supported {}'.format(config.gold_users_resource))
+    if user_profiles_supported:
+        logger.debug('TFACTOR user profiles supported')
+        tenant[config.gold_users_resource] = {
+            'usage': client.users_by_type['gold']
+        }
+
+    logger.debug('TFACTOR oa send request {}'.format(tenant))
     OA.send_request('put',
                     'aps/2/application/tenant/{}'.format(tenant_id),
                     tenant)
@@ -105,7 +115,7 @@ class Tenant(ConnectorResource):
         company_name = g.company_name = get_name_for_tenant(tenant_id)
         client = Client(g.reseller, name=company_name)
         client.refresh()
-        return {
+        tenant = {
             config.users_resource: {
                 'usage': client.users_by_type['default']
             },
@@ -116,6 +126,13 @@ class Tenant(ConnectorResource):
                 'usage': 0
             }
         }
+        user_profiles_supported = bool(config.gold_users_resource)
+        logger.debug('TFACTOR users profiles support {} 2'.format(config.gold_users_resource))
+        if user_profiles_supported:
+            tenant[config.gold_users_resource] = {
+                'usage': client.users_by_type['gold']
+            }
+        return tenant
 
     def put(self, tenant_id):
         parser = reqparse.RequestParser()
@@ -181,4 +198,13 @@ class TenantOnUsersChange(ConnectorResource):
         request.get_json()
         client = Client(g.reseller, get_name_for_tenant(tenant_id))
         sync_tenant_usage_with_client(tenant_id, client)
+        send_after_users_change_notification(tenant_id)
         return {}
+
+
+def send_after_users_change_notification(tenant_id):
+    oa_account_id = OA.get_resources('/aps/2/resources/{}/account'
+                                     .format(tenant_id))[0]['aps']['id']
+    OA.send_notification('Usage updated',
+                         details='Fallball resource usage was updated',
+                         status='ready', account_id=oa_account_id)

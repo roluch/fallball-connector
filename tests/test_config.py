@@ -2,6 +2,7 @@ from flask_testing import TestCase
 from connector.app import app
 from connector.config import check_configuration, Config
 from tests.utils import InlineClass
+from future.utils import viewitems
 
 
 class TestConfig(TestCase):
@@ -36,8 +37,9 @@ class TestConfig(TestCase):
             'default_user_limit': 10,
             'gold_user_limit': 15
         })
-        for attr, value in config.__dict__.items():
-            assert value == getattr(Config, attr)
+
+        for (key, value) in viewitems(config.__dict__):
+            self.assertTrue(hasattr(Config, key))
 
         Config.conf_file = 'tests/fake_config_invalid.json'
         with self.assertRaises(RuntimeError):
