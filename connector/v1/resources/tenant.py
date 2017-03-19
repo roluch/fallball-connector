@@ -9,7 +9,7 @@ from slumber.exceptions import HttpClientError
 from connector.config import Config
 from connector.fbclient.user import User as FbUser
 from connector.fbclient.client import Client
-from connector.utils import escape_domain_name, logger
+from connector.utils import escape_domain_name
 
 from . import (ConnectorResource, Memoize, OA, OACommunicationException,
                parameter_validator, urlify)
@@ -43,14 +43,11 @@ def sync_tenant_usage_with_client(tenant_id, client):
     }
 
     user_profiles_supported = bool(config.gold_users_resource)
-    logger.debug('TFACTOR user profiles not supported {}'.format(config.gold_users_resource))
     if user_profiles_supported:
-        logger.debug('TFACTOR user profiles supported')
         tenant[config.gold_users_resource] = {
             'usage': client.users_by_type['gold']
         }
 
-    logger.debug('TFACTOR oa send request {}'.format(tenant))
     OA.send_request('put',
                     'aps/2/application/tenant/{}'.format(tenant_id),
                     tenant)
@@ -239,7 +236,6 @@ class Tenant(ConnectorResource):
             }
         }
         user_profiles_supported = bool(config.gold_users_resource)
-        logger.debug('TFACTOR users profiles support {} 2'.format(config.gold_users_resource))
         if user_profiles_supported:
             tenant[config.gold_users_resource] = {
                 'usage': client.users_by_type['gold']
@@ -320,6 +316,7 @@ def send_after_users_change_notification(tenant_id):
     OA.send_notification('Usage updated',
                          details='Fallball resource usage was updated',
                          status='ready', account_id=oa_account_id)
+
 
 class TenantReprovision(ConnectorResource):
     def post(self, tenant_id):

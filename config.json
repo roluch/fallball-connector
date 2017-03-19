@@ -1,12 +1,12 @@
 {
-    "debug": true,
-    "fallball_service_url": "https://service-dot-mydevball.appspot.com/v1/",
-    "fallball_service_authorization_token": "3466c57843e561fc87a9b3a618cecb2f963b033b",
-    "oauth_key": "tn-local-fallball-128-v1-0f43ad4",
-    "oauth_signature": "2745ac5504a4413780ea237ce053971a",
+    "loglevel": "DEBUG",
+    "fallball_service_url": "PUT_HERE_FALLBALL_SERVICE_URI",
+    "fallball_service_authorization_token": "PUT_HERE_FALLBALL_SERVICE_AUTHORIZATION_TOKEN",
+    "oauth_key": "PUT_HERE_OAUTH_KEY",
+    "oauth_signature": "PUT_HERE_OAUTH_SIGNATURE",
     "diskspace_resource": "DISKSPACE",
     "users_resource": "USERS",
-    "gold_users_resource": "",
+    "gold_users_resource": "GOLD_USERS",
     "devices_resource": "DEVICES",
     "default_user_limit": 10,
     "gold_user_limit": 15

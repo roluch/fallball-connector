@@ -5,7 +5,7 @@ from connector.config import Config
 from connector.fbclient.client import Client
 from connector.fbclient.user import User as FbUser
 from connector.v1.resources.tenant import get_name_for_tenant,\
-    sync_tenant_usage_with_client, send_after_users_change_notification
+    sync_tenant_usage_with_client
 from . import ConnectorResource, OA, parameter_validator
 
 config = Config()
@@ -84,8 +84,9 @@ class User(ConnectorResource):
             user.profile_type = user_types.get(args.user_type)
 
         # we can't merge 2 requests into one as we don't know user.aps.type
-        # /aps/2/resources?aps.id=user_id,select(tenant,user) won't work
-        # only /aps/2/resources?implementing(user.aps.type),aps.id=user_id,select(tenant,user) will work
+        #   /aps/2/resources?aps.id=user_id,select(tenant,user) won't work
+        #   only /aps/2/resources?implementing(user.aps.type),
+        #     aps.id=user_id,select(tenant,user) will work
         oa_user = OA.get_resources('/aps/2/resources/{}/user'.format(user_id))[0]
         oa_tenant_id = OA.get_resources('/aps/2/resources/{}/tenant'
                                         .format(user_id))[0]['aps']['id']
