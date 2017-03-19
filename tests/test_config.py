@@ -25,7 +25,7 @@ class TestConfig(TestCase):
     def test_config_load(self):
         Config.load()
         config = InlineClass({
-            'loglevel': 'DEBUG',
+            'debug': True,
             'fallball_service_url': 'PUT_HERE_FALLBALL_SERVICE_URI',
             'fallball_service_authorization_token': 'PUT_HERE_FALLBALL_SERVICE_AUTHORIZATION_TOKEN',
             'oauth_key': 'PUT_HERE_OAUTH_KEY',

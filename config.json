@@ -1,5 +1,5 @@
 {
-    "loglevel": "DEBUG",
+    "debug": true,
     "fallball_service_url": "https://service-dot-mydevball.appspot.com/v1/",
     "fallball_service_authorization_token": "3466c57843e561fc87a9b3a618cecb2f963b033b",
     "oauth_key": "tn-local-fallball-128-v1-0f43ad4",

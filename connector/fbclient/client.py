@@ -10,6 +10,7 @@ class UsersByTypeSchema(Schema):
 
 class ClientSchema(Schema):
     name = fields.Str()
+    email = fields.Email()
     users_amount = fields.Int(load_only=True)
     users_by_type = fields.Nested(UsersByTypeSchema)
     storage = fields.Nested(StorageSchema)
@@ -26,16 +27,18 @@ class ClientSchema(Schema):
 
 class Client(object):
     name = None
+    email = None
     users_amount = None
     is_integrated = True
     storage = None
     reseller = None
     users_by_type = None
 
-    def __init__(self, reseller=None, name=None, is_integrated=True, users_amount=None,
+    def __init__(self, reseller=None, name=None, email=None, is_integrated=True, users_amount=None,
                  storage=None, users_by_type=None):
         self.reseller = reseller
         self.name = name
+        self.email = email
         self.is_integrated = is_integrated
         self.users_amount = users_amount
         self.storage = storage
@@ -65,7 +68,7 @@ class Client(object):
         api = self.api()
         result = api.clients(self.name).get()
         c = ClientSchema().load(result).data
-        self.__init__(self.reseller, name=c.name, is_integrated=c.is_integrated,
+        self.__init__(self.reseller, name=c.name, email=c.email, is_integrated=c.is_integrated,
                       users_amount=c.users_amount, storage=c.storage, users_by_type=c.users_by_type)
 
     def delete(self):
