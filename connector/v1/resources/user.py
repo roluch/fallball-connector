@@ -54,7 +54,7 @@ class UserList(ConnectorResource):
                       profile_type=user_types.get(args.user_type, 'default'))
 
         user.create()
-        send_after_post_notificaiton(oa_user)
+        send_after_post_notification(oa_user)
 
         return {'userId': user.email}, 201
 
@@ -66,7 +66,7 @@ class User(ConnectorResource):
         oa_user = OA.get_resources('/aps/2/resources/{}/user'.format(user_id))[0]
 
         user.delete()
-        send_after_delete_notificaiton(oa_user)
+        send_after_delete_notification(oa_user)
 
         return {}, 204
 
@@ -94,7 +94,7 @@ class User(ConnectorResource):
         if args.user_type in user_types:
             sync_tenant_usage_with_client(oa_tenant_id, client)
 
-        send_after_put_notificaiton(oa_user)
+        send_after_put_notification(oa_user)
         return {}, 200
 
 
@@ -118,17 +118,17 @@ def make_fallball_user(oa_user_service_id):
 
 
 # notifications
-def send_after_post_notificaiton(oa_user):
+def send_after_post_notification(oa_user):
     return send_notification('ready', oa_user, 'Fallball assigned to user',
                              'Fallball was assigned to {}')
 
 
-def send_after_put_notificaiton(oa_user):
+def send_after_put_notification(oa_user):
     return send_notification('ready', oa_user, 'Fallball was modified for user',
                              'Fallball service was modified for {}'.format(oa_user['displayName']))
 
 
-def send_after_delete_notificaiton(oa_user):
+def send_after_delete_notification(oa_user):
     return send_notification('ready', oa_user, 'Fallball unassigned from user',
                              'Fallball service was unassigned from {}'
                              .format(oa_user['displayName']))
