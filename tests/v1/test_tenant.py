@@ -69,7 +69,6 @@ class TestTenant(TestCase):
         self.users_changed_notification = '{}'
         self.config_without_gold = Config()
         self.config_without_gold.gold_users_resource = ''
-        print('TFACTOR without gold {}'.format(self.config_without_gold.gold_users_resource))
         self.config_with_gold = Config()
 
         return app

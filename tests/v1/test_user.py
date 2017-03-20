@@ -70,20 +70,40 @@ class TestUser(TestCase):
         fb_user_mock = make_fallball_user_mock.return_value
         fb_user_mock.client.name = 'fake_client'
         OA_mock.get_resources.return_value = [self.oa_user]
+        fb_user_mock.client.users_by_type = {
+            'default': 1,
+            'gold': 2
+        }
+        fb_user_mock.client.storage = {
+            'usage': 1,
+            'limit': 1
+        }
+        config.gold_users_resource = ''
         res = self.client.put('/v1/user/123', headers=self.headers, data='{}')
         assert res.status_code == 200
 
     @bypass_auth
+    @patch('connector.v1.resources.tenant.OA')
     @patch('connector.v1.resources.user.OA')
     @patch('connector.v1.resources.user.make_fallball_user')
-    def test_update_user_with_profiles(self, make_fallball_user_mock, OA_mock):
+    def test_update_user_with_profiles(self, make_fallball_user_mock, OA_mock, OA_tenant_mock):
         fb_user_mock = make_fallball_user_mock.return_value
         fb_user_mock.client.name = 'fake_client'
+        config.gold_users_resource = 'GOLD_USERS'
         user_payload = json.dumps({
             'resource': config.gold_users_resource
         })
+        fb_user_mock.client.users_by_type = {
+            'default': 1,
+            'gold': 2
+        }
+        fb_user_mock.client.storage = {
+            'usage': 1,
+            'limit': 1
+        }
         OA_mock.get_resources.return_value = [self.oa_user]
         res = self.client.put('/v1/user/123', headers=self.headers, data=user_payload)
+        OA_tenant_mock.send_request.assert_called()
         assert res.status_code == 200
 
     @bypass_auth

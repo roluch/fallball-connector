@@ -91,7 +91,9 @@ class User(ConnectorResource):
         oa_tenant_id = OA.get_resources('/aps/2/resources/{}/tenant'
                                         .format(user_id))[0]['aps']['id']
         user.update()
-        sync_tenant_usage_with_client(oa_tenant_id, client)
+        if args.user_type in user_types:
+            sync_tenant_usage_with_client(oa_tenant_id, client)
+
         send_after_put_notificaiton(oa_user)
         return {}, 200
 
