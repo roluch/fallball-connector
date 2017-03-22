@@ -16,6 +16,6 @@ script:
   - python setup.py nosetests
 after_success:
   - bash <(curl -s https://codecov.io/bash)
-  - docker build -t ingrammicro/fallball-connector .
+  - docker build -t ingrammicrocloud/fallball-connector .
   - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-  - docker push ingrammicro/fallball-connector
+  - docker push ingrammicrocloud/fallball-connector
