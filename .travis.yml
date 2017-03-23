@@ -5,6 +5,8 @@ branches:
 python:
   - "2.7"
   - "3.5"
+services:
+  - docker
 install:
   - pip install -r requirements.txt
   - pip install -r test-requirements.txt
