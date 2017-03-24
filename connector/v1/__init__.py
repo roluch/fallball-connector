@@ -49,7 +49,7 @@ def set_name_for_reseller(reseller_id):
 
 def get_oauth():
     client_key = get_client_key(request)
-    client_secret = Config().oauth_signature
+    client_secret = Config().oauth_secret
     if not client_key or not client_secret:
         return None
     return OAuth1(client_key=client_key,
