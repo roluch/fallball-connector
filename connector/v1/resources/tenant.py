@@ -42,11 +42,14 @@ def sync_tenant_usage_with_client(tenant_id, client):
         }
     }
 
-    user_profiles_supported = bool(config.gold_users_resource)
-    if user_profiles_supported:
-        tenant[config.gold_users_resource] = {
-            'usage': client.users_by_type['gold']
-        }
+    # On the TestLab the fallball connector is not reconfigured each time the model is changed
+    #   the property 'gold_users_resource' will always be filled
+    # so the code below will raise an exception if only one User counter is supported
+    # user_profiles_supported = bool(config.gold_users_resource)
+    # if user_profiles_supported:
+    #     tenant[config.gold_users_resource] = {
+    #         'usage': client.users_by_type['gold']
+    #     }
 
     OA.send_request('put',
                     'aps/2/application/tenant/{}'.format(tenant_id),
