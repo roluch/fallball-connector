@@ -7,7 +7,7 @@ def check_configuration(config):
         'fallball_service_url',
         'fallball_service_authorization_token',
         'oauth_key',
-        'oauth_signature',
+        'oauth_secret',
     ):
         if getattr(config, item).startswith('PUT_HERE_'):
             return False
@@ -27,7 +27,7 @@ class Config(object):
     fallball_service_url = None
     fallball_service_authorization_token = None
     oauth_key = None
-    oauth_signature = None
+    oauth_secret = None
 
     def __init__(self):
         if not Config.diskspace_resource:
@@ -53,7 +53,7 @@ class Config(object):
                 Config.fallball_service_authorization_token = \
                     config['fallball_service_authorization_token']
                 Config.oauth_key = config['oauth_key']
-                Config.oauth_signature = config['oauth_signature']
+                Config.oauth_secret = config['oauth_secret']
             except KeyError as e:
                 raise RuntimeError(
                     "{} parameter not specified in config.".format(e))

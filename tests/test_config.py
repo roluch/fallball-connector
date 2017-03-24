@@ -16,7 +16,7 @@ class TestConfig(TestCase):
             'fallball_service_url': 'FAKE_VALUE',
             'fallball_service_authorization_token': 'FAKE_VALUE',
             'oauth_key': 'FAKE_VALUE',
-            'oauth_signature': 'FAKE_VALUE'
+            'oauth_secret': 'FAKE_VALUE'
         })
         assert check_configuration(config) is True
         config.fallball_service_url = 'PUT_HERE_FAKE_VALUE'
@@ -29,7 +29,7 @@ class TestConfig(TestCase):
             'fallball_service_url': 'PUT_HERE_FALLBALL_SERVICE_URI',
             'fallball_service_authorization_token': 'PUT_HERE_FALLBALL_SERVICE_AUTHORIZATION_TOKEN',
             'oauth_key': 'PUT_HERE_OAUTH_KEY',
-            'oauth_signature': 'PUT_HERE_OAUTH_SIGNATURE',
+            'oauth_secret': 'PUT_HERE_OAUTH_SECRET',
             'diskspace_resource': 'DISKSPACE',
             'users_resource': 'USERS',
             'gold_users_resource': 'GOLD_USERS',

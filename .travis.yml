@@ -5,6 +5,8 @@ branches:
 python:
   - "2.7"
   - "3.5"
+services:
+  - docker
 install:
   - pip install -r requirements.txt
   - pip install -r test-requirements.txt
@@ -16,3 +18,6 @@ script:
   - python setup.py nosetests
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+  - docker build -t ingrammicrocloud/fallball-connector .
+  - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+  - docker push ingrammicrocloud/fallball-connector
