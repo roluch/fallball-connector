@@ -22,7 +22,7 @@ python setup.py develop
     "fallball_service_url": "PUT_HERE_FALLBALL_SERVICE_URI",
     "fallball_service_authorization_token": "PUT_HERE_FALLBALL_SERVICE_AUTHORIZATION_TOKEN",
     "oauth_key": "PUT_HERE_OAUTH_KEY",
-    "oauth_signature": "PUT_HERE_OAUTH_SIGNATURE"
+    "oauth_secret": "PUT_HERE_OAUTH_SECRET"
 }
 ```
 

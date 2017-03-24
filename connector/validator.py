@@ -29,7 +29,7 @@ class RequestValidator(oauth.RequestValidator):
     def get_client_secret(self, client_key, request):
         if client_key == 'dummy':
             return u'blah-blah-blah'
-        return self._config.oauth_signature
+        return self._config.oauth_secret
 
     def validate_timestamp_and_nonce(self, client_key, timestamp, nonce, request,
                                      request_token=None, access_token=None):
