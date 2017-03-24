@@ -84,8 +84,7 @@ class OA(object):
 
     @staticmethod
     def send_notification(message, details=None, message_keys=None, account_id=None,
-                          status='ready', user_id=None):
-
+                          status='ready', user_id=None, link=None):
         notification = {
             'status': status,
             'message': {
@@ -104,9 +103,14 @@ class OA(object):
             }
             if message_keys is not None:
                 notification['details']['keys'] = message_keys
+        if link is not None:
+            notification['link'] = link
+        initiator_id = request.headers.get('aps-identity-id')
+        if initiator_id is not None:
+            notification['initiatorId'] = initiator_id
 
         rql_request = 'aps/2/resources/{}/notifications'.format(OA.get_notification_manager())
-        return OA.send_request('post', rql_request, notification, transaction=True)
+        return OA.send_request('post', rql_request, notification, transaction=False)
 
     @staticmethod
     def subscribe_on(resource_id='', event_type='', handler='', relation='',

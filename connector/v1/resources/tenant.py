@@ -41,6 +41,16 @@ def sync_tenant_usage_with_client(tenant_id, client):
             'usage': 0
         }
     }
+
+    # On the TestLab the fallball connector is not reconfigured each time the model is changed
+    #   the property 'gold_users_resource' will always be filled
+    # so the code below will raise an exception if only one User counter is supported
+    # user_profiles_supported = bool(config.gold_users_resource)
+    # if user_profiles_supported:
+    #     tenant[config.gold_users_resource] = {
+    #         'usage': client.users_by_type['gold']
+    #     }
+
     OA.send_request('put',
                     'aps/2/application/tenant/{}'.format(tenant_id),
                     tenant)
@@ -217,7 +227,7 @@ class Tenant(ConnectorResource):
         company_name = g.company_name = get_name_for_tenant(tenant_id)
         client = Client(g.reseller, name=company_name)
         client.refresh()
-        return {
+        tenant = {
             config.users_resource: {
                 'usage': client.users_by_type['default']
             },
@@ -228,6 +238,12 @@ class Tenant(ConnectorResource):
                 'usage': 0
             }
         }
+        user_profiles_supported = bool(config.gold_users_resource)
+        if user_profiles_supported:
+            tenant[config.gold_users_resource] = {
+                'usage': client.users_by_type['gold']
+            }
+        return tenant
 
     def put(self, tenant_id):
         parser = reqparse.RequestParser()
@@ -293,7 +309,16 @@ class TenantOnUsersChange(ConnectorResource):
         request.get_json()
         client = Client(g.reseller, get_name_for_tenant(tenant_id))
         sync_tenant_usage_with_client(tenant_id, client)
+        send_after_users_change_notification(tenant_id)
         return {}
+
+
+def send_after_users_change_notification(tenant_id):
+    oa_account_id = OA.get_resources('/aps/2/resources/{}/account'
+                                     .format(tenant_id))[0]['aps']['id']
+    OA.send_notification('Usage updated',
+                         details='Fallball resource usage was updated',
+                         status='ready', account_id=oa_account_id)
 
 
 class TenantReprovision(ConnectorResource):
