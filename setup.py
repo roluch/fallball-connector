@@ -9,11 +9,11 @@ from pip.req import parse_requirements
 
 here = abspath(dirname(__file__))
 
-
-PACKAGE_VERSION = '0.1.1'
-
 with codecs.open(join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
+
+with codecs.open(join(here, 'VERSION'), encoding='utf-8') as f:
+    VERSION = f.read()
 
 install_reqs = parse_requirements(join(here, 'requirements.txt'), session=False)
 reqs = [str(ir.req) for ir in install_reqs]
@@ -21,7 +21,7 @@ reqs = [str(ir.req) for ir in install_reqs]
 
 setup(
     name='fallball-connector',
-    version=PACKAGE_VERSION,
+    version=VERSION,
     author='APS Connect team',
     author_email='aps@odin.com',
     packages=find_packages(exclude=['tests']),
