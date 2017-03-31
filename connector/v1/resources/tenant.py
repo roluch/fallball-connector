@@ -180,10 +180,10 @@ def provision_fallball_client(args):
                                       {'Aps-Info': "Additional information required to complete "
                                                    "provisioning"})
         else:
-            info = report_error(resp)
+            info.update(report_error(resp))
             return ProvisioningResult(info, 500, {})
     except Exception as e:
-        info = report_error(str(e))
+        info.update(report_error(str(e)))
         return ProvisioningResult(info, 500, {})
 
     if not user_integration_enabled:
