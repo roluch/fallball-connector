@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 import socket
 
@@ -36,5 +37,5 @@ if __name__ == '__main__':
                            "parameters, please update the JSON config "
                            "file and replace PUT_HERE_* values with real "
                            "ones")
-
-    app.run(debug=Config().debug, host='0.0.0.0', threaded=True)
+    port = int(os.getenv('CONNECTOR_PORT', '5000'))
+    app.run(debug=Config().debug, host='0.0.0.0', port=port, threaded=True)
