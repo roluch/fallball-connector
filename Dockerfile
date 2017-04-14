@@ -6,6 +6,7 @@ ENV PYTHONPATH /
 ENV CONNECTOR_PORT 80
 ENV DEBUG True
 RUN pip install -r requirements.txt
+RUN pip install gunicorn
 EXPOSE 80
-ENTRYPOINT ["python"]
-CMD ["app.py"]
+ENTRYPOINT ["/usr/local/bin/gunicorn", "connector.app:app"]
+CMD ["-b", "0.0.0.0:80", "-t", "60"]
