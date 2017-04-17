@@ -92,4 +92,4 @@ def escape_domain_name(name):
 
 
 def guid():
-  return uuid.uuid4().hex
+    return uuid.uuid4().hex
