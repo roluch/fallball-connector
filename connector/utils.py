@@ -3,6 +3,7 @@ import sys
 import json
 import os
 import re
+import uuid
 
 from flask import g
 
@@ -63,8 +64,9 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(stream)
 
 
-def log_request(request):
-    logger.debug({"type": "request",
+def log_request(request_id, request):
+    logger.debug({"request_id": request_id,
+                  "type": "request",
                   "app": "fallball_connector",
                   "method": request.method,
                   "url": request.url,
@@ -72,8 +74,9 @@ def log_request(request):
                   "data": request.data.decode('utf-8')})
 
 
-def log_response(response):
-    logger.debug({"type": "response",
+def log_response(request_id, response):
+    logger.debug({"request_id": request_id,
+                  "type": "response",
                   "app": "fallball_connector",
                   "status_code": response.status_code,
                   "status": response.status,
@@ -86,3 +89,7 @@ def escape_domain_name(name):
     valid_name = re.sub(r'[^a-zA-Z0-9-.]', '-', name)
     valid_name = re.sub(r'(^-+)|(-+$)', '', valid_name)
     return valid_name
+
+
+def guid():
+  return uuid.uuid4().hex
