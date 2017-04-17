@@ -64,8 +64,8 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(stream)
 
 
-def log_request(request_id, request):
-    logger.debug({"request_id": request_id,
+def log_request(request):
+    logger.debug({"request_id": g.request_id,
                   "type": "request",
                   "app": "fallball_connector",
                   "method": request.method,
@@ -74,8 +74,8 @@ def log_request(request_id, request):
                   "data": request.data.decode('utf-8')})
 
 
-def log_response(request_id, response):
-    logger.debug({"request_id": request_id,
+def log_response(response):
+    logger.debug({"request_id": g.request_id,
                   "type": "response",
                   "app": "fallball_connector",
                   "status_code": response.status_code,

@@ -76,7 +76,7 @@ def before_request():
     g.reseller_name = reseller_info.name
     g.company_name = 'N/A'
 
-    log_request(g.request_id, request)
+    log_request(request)
 
     if not reseller_info.name:
         allow_public_endpoints_only()
@@ -96,7 +96,7 @@ def before_request():
 
 @api_bp.after_request
 def after_request(response):
-    log_response(g.request_id, response)
+    log_response(response)
     return response
 
 
