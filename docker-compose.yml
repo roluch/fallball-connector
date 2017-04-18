@@ -3,5 +3,9 @@ connector:
   build: .
   ports:
     - "5000:80"
+  entrypoint:
+    - python
+    - app.py
   volumes:
     - ./connector:/connector
+    - ./config.json:/connector/config.json
