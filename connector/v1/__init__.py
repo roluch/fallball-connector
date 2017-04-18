@@ -8,7 +8,7 @@ from requests_oauthlib import OAuth1
 from faker import Faker
 
 from connector.config import Config
-from connector.utils import log_request, log_response
+from connector.utils import log_request, log_response, guid
 from connector.validator import check_oauth_signature, get_client_key
 from connector.fbclient.reseller import Reseller
 
@@ -66,6 +66,8 @@ def get_reseller_info():
 
 @api_bp.before_request
 def before_request():
+    g.request_id = guid()
+
     g.endpoint = request.endpoint
     if request.blueprint:
         g.endpoint = g.endpoint[len(request.blueprint):].lstrip('.')
