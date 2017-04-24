@@ -1,3 +1,4 @@
+from collections import namedtuple
 import re
 import json
 
@@ -19,6 +20,8 @@ from flask import g, request
 from flask_restful import Resource
 
 from slumber.exceptions import HttpClientError, HttpServerError
+
+ErrorResponse = namedtuple("ErrorResponse", "status_code text")
 
 
 class Memoize(object):
@@ -66,8 +69,10 @@ class ConnectorResource(Resource):
 
 class OACommunicationException(Exception):
     def __init__(self, resp):
-        msg = "Request to OA failed. OA responded with code {}\n{}".format(resp.status_code,
-                                                                           resp.text)
+        msg = "Request to OA failed."
+        if resp.status_code:
+            msg += " OA responded with code {}".format(resp.status_code)
+        msg += "\nError message: {}".format(resp.text)
         super(OACommunicationException, self).__init__(msg)
 
 
@@ -160,15 +165,23 @@ class OA(object):
 
         while retry_num > 0:
             retry_num -= 1
-            resp = requests.request(
-                method=method,
-                url=url,
-                data=data,
-                headers=headers,
-                auth=g.auth,
-                timeout=OA.request_timeout,
-                verify=False
-            )
+            try:
+                resp = requests.request(
+                    method=method,
+                    url=url,
+                    data=data,
+                    headers=headers,
+                    auth=g.auth,
+                    timeout=OA.request_timeout,
+                    verify=False
+                )
+            except requests.exceptions.Timeout:
+                err = ErrorResponse(None, 'Request to OA timed out. '
+                                          'Timeout: {}'.format(OA.request_timeout))
+                raise OACommunicationException(err)
+            except Exception as e:
+                err = ErrorResponse(None, str(e))
+                raise OACommunicationException(err)
 
             if resp.status_code == 200:
                 return resp.json()

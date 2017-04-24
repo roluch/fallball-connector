@@ -123,7 +123,16 @@ resource_routes = {
     '/user/<user_id>/login': UserLogin,
 }
 
-api = Api(api_bp)
+
+class FallballApi(Api):
+    def handle_error(self, e):
+        code = getattr(e, 'code', 500)
+        return self.make_response({'message': str(e),
+                                   'error': type(e).__name__},
+                                  code)
+
+
+api = FallballApi(api_bp, catch_all_404s=True)
 
 for route, resource in resource_routes.items():
     api.add_resource(resource, route, strict_slashes=False)
