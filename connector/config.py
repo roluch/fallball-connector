@@ -1,5 +1,17 @@
-import json
 import os
+
+import yaml
+from yaml import Loader, SafeLoader
+
+
+def construct_yaml_str(self, node):
+    # Override the default string handling function
+    # to always return unicode objects
+    return self.construct_scalar(node)
+
+
+Loader.add_constructor(u'tag:yaml.org,2002:str', construct_yaml_str)
+SafeLoader.add_constructor(u'tag:yaml.org,2002:str', construct_yaml_str)
 
 
 def check_configuration(config):
@@ -16,7 +28,7 @@ def check_configuration(config):
 
 
 class Config(object):
-    conf_file = os.environ.get('CONFIG_FILE', './config.json')
+    conf_file = os.environ.get('CONFIG_FILE', './config.yml')
     debug = False
     diskspace_resource = None
     default_user_limit = None
@@ -39,7 +51,7 @@ class Config(object):
             raise IOError("Config file not found: {}".format(Config.conf_file))
 
         with open(Config.conf_file, 'r') as c:
-            config = json.load(c)
+            config = yaml.load(c)
             Config.default_user_limit = config.get('default_user_limit', 10)
             Config.gold_user_limit = config.get('gold_user_limit', 15)
             Config.gold_users_resource = config.get('gold_users_resource', 'GOLD_USERS')
