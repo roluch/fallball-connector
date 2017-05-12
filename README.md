@@ -15,15 +15,13 @@ This is a basic sample connector for the [Fallball Cloud Storage](https://github
 python setup.py develop
 ```
 
-* Update `config.json` file with your credantials
+* Update `config.yml` file with your credentials
 
-```json
-{
-    "fallball_service_url": "PUT_HERE_FALLBALL_SERVICE_URI",
-    "fallball_service_authorization_token": "PUT_HERE_FALLBALL_SERVICE_AUTHORIZATION_TOKEN",
-    "oauth_key": "PUT_HERE_OAUTH_KEY",
-    "oauth_secret": "PUT_HERE_OAUTH_SECRET"
-}
+```yaml
+fallball_service_url: PUT_HERE_FALLBALL_SERVICE_URI
+fallball_service_authorization_token: PUT_HERE_FALLBALL_SERVICE_AUTHORIZATION_TOKEN
+oauth_key: PUT_HERE_OAUTH_KEY
+oauth_secret: PUT_HERE_OAUTH_SECRET
 ```
 
 * Run application
