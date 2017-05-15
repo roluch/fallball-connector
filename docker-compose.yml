@@ -8,4 +8,4 @@ connector:
     - app.py
   volumes:
     - ./connector:/connector
-    - ./config.json:/connector/config.json
+    - ./config.yml:/connector/config.yml
