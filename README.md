@@ -39,7 +39,7 @@ ngrok http 5000
 
 * Use public connector URL <https://YOUR_UNIQ_ID.ngrok.io/v1/>
 
-If you run connector without SSL behind SSL-enabled reverse proxy, make sure that proxy populates the `X-Forwarded-Proto` header.
+If you run the connector without SSL behind SSL-enabled reverse proxy, make sure that proxy populates the `X-Forwarded-Proto` header.
 
 ## Running in Docker
 
