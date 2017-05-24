@@ -1,4 +1,4 @@
-from flask import g, make_response
+from flask import g
 from flask_restful import reqparse
 
 from connector.config import Config
