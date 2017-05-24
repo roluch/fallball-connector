@@ -219,6 +219,8 @@ Assign a different service to user.
 
 ### Log user in [GET /user/{id}/login]
 
-+ Response 200 (text/plain)
++ Response 200 (application/json)
 
-        http://fallball.io/#/auth?token=CJleHAiOjE0O
+        {
+            "redirectUrl": "http://fallball.io/#/auth?token=CJleHAiOjE0O"
+        }
