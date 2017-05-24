@@ -103,9 +103,7 @@ class UserLogin(ConnectorResource):
         user = make_fallball_user(user_id)
         g.company_name = user.client.name
 
-        response = make_response(user.login_link())
-        response.headers.add('Content-Type', 'text/plain')
-        return response
+        return {'redirectUrl': user.login_link()}, 200
 
 
 def make_fallball_user(oa_user_service_id):
