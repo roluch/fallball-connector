@@ -2,7 +2,7 @@
 
 from collections import namedtuple
 
-from flask import g, make_response
+from flask import g
 from flask_restful import reqparse, request
 from slumber.exceptions import HttpClientError
 
@@ -291,7 +291,7 @@ class TenantAdminLogin(ConnectorResource):
             login_link = fake_user.login_link()
 
         return {
-            'redirectUrl': fake_user.login_link(),
+            'redirectUrl': login_link,
         }, 200
 
 
