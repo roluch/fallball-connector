@@ -155,9 +155,11 @@ Resources related to subscription API
 
 ### Login to application [GET /tenant/{id}/adminlogin]
 
-+ Response 200 (text/plain)
++ Response 200 (application/json)
 
-        http://fallball.io/#/auth?token=eyJhbGciOiJE
+        {
+            "redirectUrl": "http://fallball.io/#/auth?token=eyJhbGciOiJE"
+        }
 
 ### New user notification [POST /tenant/{id}/users]
 
