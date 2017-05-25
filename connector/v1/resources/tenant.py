@@ -289,9 +289,10 @@ class TenantAdminLogin(ConnectorResource):
             fake_user = FbUser(client=Client(g.reseller, 'fake_client'),
                                email='does-not-exist@non-existing.local')
             login_link = fake_user.login_link()
-        response = make_response(login_link)
-        response.headers.add('Content-Type', 'text/plain')
-        return response
+
+        return {
+            'redirectUrl': fake_user.login_link(),
+        }, 200
 
 
 class TenantUserCreated(ConnectorResource):
