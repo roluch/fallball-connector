@@ -15,15 +15,13 @@ This is a basic sample connector for the [Fallball Cloud Storage](https://github
 python setup.py develop
 ```
 
-* Update `config.json` file with your credantials
+* Update `config.yml` file with your credentials
 
-```json
-{
-    "fallball_service_url": "PUT_HERE_FALLBALL_SERVICE_URI",
-    "fallball_service_authorization_token": "PUT_HERE_FALLBALL_SERVICE_AUTHORIZATION_TOKEN",
-    "oauth_key": "PUT_HERE_OAUTH_KEY",
-    "oauth_secret": "PUT_HERE_OAUTH_SECRET"
-}
+```yaml
+fallball_service_url: PUT_HERE_FALLBALL_SERVICE_URI
+fallball_service_authorization_token: PUT_HERE_FALLBALL_SERVICE_AUTHORIZATION_TOKEN
+oauth_key: PUT_HERE_OAUTH_KEY
+oauth_secret: PUT_HERE_OAUTH_SECRET
 ```
 
 * Run application
@@ -41,7 +39,7 @@ ngrok http 5000
 
 * Use public connector URL <https://YOUR_UNIQ_ID.ngrok.io/v1/>
 
-If you run connector without SSL behind SSL-enabled reverse proxy, make sure that proxy populates the `X-Forwarded-Proto` header.
+If you run the connector without SSL behind SSL-enabled reverse proxy, make sure that proxy populates the `X-Forwarded-Proto` header.
 
 ## Running in Docker
 

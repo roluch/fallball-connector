@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     if not check_configuration(Config()):
         raise RuntimeError("You can't run your connector with default "
-                           "parameters, please update the JSON config "
+                           "parameters, please update the YML config "
                            "file and replace PUT_HERE_* values with real "
                            "ones")
     port = int(os.getenv('CONNECTOR_PORT', '5000'))

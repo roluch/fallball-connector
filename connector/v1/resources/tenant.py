@@ -2,7 +2,7 @@
 
 from collections import namedtuple
 
-from flask import g, make_response
+from flask import g
 from flask_restful import reqparse, request
 from slumber.exceptions import HttpClientError
 
@@ -292,9 +292,10 @@ class TenantAdminLogin(ConnectorResource):
             fake_user = FbUser(client=Client(g.reseller, 'fake_client'),
                                email='does-not-exist@non-existing.local')
             login_link = fake_user.login_link()
-        response = make_response(login_link)
-        response.headers.add('Content-Type', 'text/plain')
-        return response
+
+        return {
+            'redirectUrl': login_link,
+        }, 200
 
 
 class TenantUserCreated(ConnectorResource):
