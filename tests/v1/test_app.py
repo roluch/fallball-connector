@@ -43,11 +43,6 @@ class TestApp(TestCase):
         assert res.status_code == 204
 
     @bypass_auth
-    def test_delete_not_your_app(self):
-        res = self.client.delete('/v1/app/someone_elses_app', headers=self.headers)
-        assert res.status_code == 403
-
-    @bypass_auth
     def test_app_new_tenant(self):
         res = self.client.post('/v1/app/123/tenants', headers=self.headers)
         assert res.status_code == 200
