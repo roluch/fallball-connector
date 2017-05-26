@@ -104,11 +104,12 @@ def analyze_service_error(data):
                             'text': "Please provide additional information to complete "
                                     "provisioning of the FallBall service",
                             'textLocalized': {
-                                'ru': u'Пожалуйста, предоставьте дополнительные данные '
-                                      u'для завершения создания сервиса FallBall'
+                                'ru_RU': u"Пожалуйста, предоставьте дополнительные данные "
+                                         u"для завершения создания сервиса FallBall",
+                                'fr_FR': u"Veuillez fournir des informations supplémentaires pour "
+                                         u"compléter l'approvisionnement du service FallBall"
                             }
                         }
-
                     ],
                     'perPropertyData': [
                         {
@@ -116,8 +117,10 @@ def analyze_service_error(data):
                             'message': {
                                 'text': "Dots are not allowed in local parts of email addresses",
                                 'textLocalized': {
-                                    'ru': u"Часть адреса электронной почты до знака @ "
-                                          u"не должна содержать точек"
+                                    'ru_RU': u"Часть адреса электронной почты до знака @ "
+                                             u"не должна содержать точек",
+                                    'fr_FR': u"Les points ne sont pas autorisés dans les "
+                                             u"parties locales des adresses e-mail"
                                 }
                             },
                             'pattern': r'(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|'
