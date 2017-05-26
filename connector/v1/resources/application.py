@@ -2,7 +2,7 @@ import pkg_resources
 
 from flask import g
 
-from flask_restful import abort, reqparse
+from flask_restful import reqparse
 
 from connector.fbclient.reseller import Reseller
 
@@ -39,8 +39,6 @@ class ApplicationList(ConnectorResource):
 
 class Application(ConnectorResource):
     def delete(self, app_id):
-        if g.reseller.reseller_name != app_id:
-            abort(403)
         g.reseller.delete()
         return {}, 204
 
