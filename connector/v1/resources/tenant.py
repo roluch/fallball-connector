@@ -120,7 +120,7 @@ def analyze_service_error(data):
                                     'ru_RU': u"Часть адреса электронной почты до знака @ "
                                              u"не должна содержать точек",
                                     'fr_FR': u"Les points ne sont pas autorisés dans les "
-                                             u"parties locales des adresses e-mail"
+                                             u"parties locales des adresses email"
                                 }
                             },
                             'pattern': r'(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|'
