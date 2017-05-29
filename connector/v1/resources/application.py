@@ -1,3 +1,5 @@
+import uuid
+
 import pkg_resources
 
 from flask import g
@@ -34,7 +36,7 @@ class ApplicationList(ConnectorResource):
                             required=True, help='No APS id specified')
         args = parser.parse_args()
         g.reseller.create()
-        return {'aps': {'type': args.aps_type, 'id': args.aps_id}}, 201
+        return {'aps': {'type': args.aps_type, 'id': args.aps_id}, 'appID': str(uuid.uuid4())}, 201
 
 
 class Application(ConnectorResource):
