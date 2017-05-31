@@ -94,7 +94,7 @@ def get_tenant_args():
 
 
 def analyze_service_error(data):
-    if len(data) == 1 and 'email' in data:
+    if len(data) == 1 and 'postalCode' in data:
         info = {'status': 'activationRequired',
                 'statusData': {
                     'code': 'ActivationData',
@@ -113,19 +113,19 @@ def analyze_service_error(data):
                     ],
                     'perPropertyData': [
                         {
-                            'propertyName': 'accountinfo.techContact.email',
+                            'propertyName': 'accountinfo.addressPostal.postalCode',
                             'message': {
-                                'text': "Dots are not allowed in local parts of email addresses",
+                                'text': "Postal code should not start with 999. "
+                                        "Service is not available for Alaska currently",
                                 'textLocalized': {
-                                    'ru_RU': u"Часть адреса электронной почты до знака @ "
-                                             u"не должна содержать точек",
-                                    'fr_FR': u"Les points ne sont pas autorisés dans les "
-                                             u"parties locales des adresses email"
+                                    'ru_RU': u"Почтовый индес не должен начинаться с 999. "
+                                             u"Сервис временно не доступен для Аляски",
+                                    'fr_FR': u"Code Postal ne doit pas commencer par 999. "
+                                             u"Le Service n'est pas disponible "
+                                             u"en Alaska actuellement"
                                 }
                             },
-                            'pattern': r'(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|'
-                                       r'(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]'
-                                       r'{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))'
+                            'pattern': r'(\d{5})'
                         }
                     ]
                 }}
@@ -153,17 +153,18 @@ def provision_fallball_client(args):
 
     company_info = OA.get_resource(args.acc_id)
     company_name = urlify(company_info['companyName'])
+    admin_email = company_info['techContact']['email']
 
-    if args.account_info['techContact'].get('email'):
-        admin_email = args.account_info['techContact']['email']
+    if args.account_info['addressPostal'].get('postalCode'):
+        postal_code = args.account_info['addressPostal']['postalCode']
     else:
-        admin_email = company_info['techContact']['email']
+        postal_code = company_info['addressPostal']['postalCode']
 
     info = {
         'accountinfo': {
-            'techContact': {
-                'email': admin_email
-            }
+            'addressPostal': {
+                  'postalCode': postal_code
+            },
         }
     }
 
@@ -173,7 +174,7 @@ def provision_fallball_client(args):
     storage_limit = args.storage_limit if args.storage_limit else 0
 
     client = Client(g.reseller, name=company_name, is_integrated=user_integration_enabled,
-                    storage={'limit': storage_limit}, email=admin_email)
+                    storage={'limit': storage_limit}, email=admin_email, postal_code=postal_code)
 
     try:
         client.create()
