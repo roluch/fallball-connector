@@ -120,7 +120,7 @@ resource_routes = {
 
     '/user': UserList,
     '/user/<user_id>': User,
-    '/user/<user_id>/login': UserLogin,
+    '/user/<user_id>/userlogin': UserLogin,
 }
 
 
