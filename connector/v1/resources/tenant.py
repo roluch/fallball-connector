@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from collections import namedtuple
+import hashlib
+import uuid
 
 from flask import g
 from flask_restful import reqparse, request
@@ -60,8 +62,8 @@ def make_default_fallball_admin(client):
     email = 'admin@{client_name}.{reseller_name}.fallball.io'.format(
         client_name=escape_domain_name(client.name),
         reseller_name=escape_domain_name(client.reseller.name))
-
-    user = FbUser(client=client, email=email, admin=True, storage={'limit': 0})
+    user_id = uuid.UUID(hashlib.md5(email.encode()).hexdigest())
+    user = FbUser(client=client, user_id=user_id, email=email, admin=True, storage={'limit': 0})
     return user
 
 
@@ -194,7 +196,7 @@ def provision_fallball_client(args):
 
     if not user_integration_enabled:
         user = make_default_fallball_admin(client)
-        user.create()
+        user.update()
 
     OA.subscribe_on(args.aps_id, 'http://aps-standard.org/core/events/linked',
                     relation='users',

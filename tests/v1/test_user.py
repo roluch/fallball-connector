@@ -21,7 +21,7 @@ class TestUser(TestCase):
                         'displayName': 'User Name', 'aps': {'id': '123'}}
         self.user_service = {'aps': {'type': 'http://new.app/user-service/1.0'},
                              'tenant': {'aps': {'id': '123'}},
-                             'userId': 'user@example.com',
+                             'userId': '3c9ed599-cd79-4222-beb0-be83f9dc8078',
                              'user': {'aps': {'id': '123'}
                                       }
                              }
@@ -41,6 +41,7 @@ class TestUser(TestCase):
         client_instance = FbClient_mock.return_value
         get_name_for_tenant_mock.return_value = 'fake_client'
         fb_user_mock.email = 'user@odin.com'
+        fb_user_mock.user_id = '3c9ed599-cd79-4222-beb0-be83f9dc8078'
         client_instance.storage = {'limit': 100}
         OA_mock.get_resources.return_value = [self.new_tenant]
         OA_mock.get_resource.return_value = self.oa_user
@@ -56,7 +57,7 @@ class TestUser(TestCase):
         fb_user_mock = make_fallball_user_mock.return_value
         fb_user_mock.client.name = 'fake_client'
         make_fallball_user_mock = self.user_service
-        make_fallball_user_mock['userId'] = 'user@localhost'
+        make_fallball_user_mock['userId'] = '3c9ed599-cd79-4222-beb0-be83f9dc8078'
         OA_mock.get_resource.return_value = make_fallball_user_mock
         OA_mock.get_resources.side_effect = [[self.oa_user], [self.new_tenant]]
         res = self.client.delete('/v1/user/123', headers=self.headers)
@@ -125,4 +126,4 @@ class TestUser(TestCase):
         user = make_fallball_user('123-123-123')
         assert user.client.name == 'fake_client'
         assert user.client.reseller.name == 'fake_reseller'
-        assert user.email == 'user@example.com'
+        assert user.user_id == '3c9ed599-cd79-4222-beb0-be83f9dc8078'

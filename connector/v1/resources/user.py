@@ -54,9 +54,10 @@ class UserList(ConnectorResource):
                       profile_type=user_types.get(args.user_type, 'default'))
 
         user.create()
+
         send_after_post_notification(oa_user)
 
-        return {'userId': user.email}, 201
+        return {'userId': user.user_id}, 201
 
 
 class User(ConnectorResource):
@@ -110,7 +111,7 @@ def make_fallball_user(oa_user_service_id):
     oa_user_service = OA.get_resource(oa_user_service_id)
     oa_tenant_id = oa_user_service['tenant']['aps']['id']
     client = Client(reseller=g.reseller, name=get_name_for_tenant(oa_tenant_id))
-    user = FbUser(client=client, email=oa_user_service['userId'])
+    user = FbUser(client=client, user_id=oa_user_service['userId'])
 
     return user
 
