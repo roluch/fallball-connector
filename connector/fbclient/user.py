@@ -4,6 +4,7 @@ from connector.fbclient import StorageSchema
 
 
 class UserSchema(Schema):
+    user_id = fields.UUID()
     email = fields.Email()
     password = fields.Str()
     storage = fields.Nested(StorageSchema)
@@ -20,15 +21,17 @@ class UserSchema(Schema):
 
 
 class User(object):
+    user_id = None
     email = None
     password = None
     admin = None
     storage = None
     profile_type = None
 
-    def __init__(self, client=None, email=None, password=None, admin=None, storage=None,
-                 profile_type=None):
+    def __init__(self, client=None, user_id=None, email=None, password=None, admin=None,
+                 storage=None, profile_type=None):
         self.client = client
+        self.user_id = user_id
         self.email = email
         self.password = password
         self.admin = admin
@@ -52,29 +55,31 @@ class User(object):
         if not self.password:
             self.password = 'password'
         result = api.users.post(self._dump)
+        if 'user_id' in result:
+            self.user_id = result['user_id']
         return result
 
     def update(self):
-        self.api().users(self.email).put(self._dump)
+        self.api().users(self.user_id).put(self._dump)
 
     def refresh(self):
         api = self.api()
-        result = api.users(self.email).get()
+        result = api.users(self.user_id).get()
         u = UserSchema().load(result).data
-        self.__init__(self.client, email=u.email, password=u.password, admin=u.admin,
-                      storage=u.storage, profile_type=u.profile_type)
+        self.__init__(self.client, user_id=u.user_id, email=u.email, password=u.password,
+                      admin=u.admin, storage=u.storage, profile_type=u.profile_type)
 
     def delete(self):
         api = self.api()
-        result = api.users(self.email).delete()
+        result = api.users(self.user_id).delete()
         return result
 
     def token(self):
         api = self.api()
-        result = api.users(self.email).token.get()
+        result = api.users(self.user_id).token.get()
         return result
 
     def login_link(self):
         api = self.api()
-        result = api.users(self.email).link.get()
+        result = api.users(self.user_id).link.get()
         return result
