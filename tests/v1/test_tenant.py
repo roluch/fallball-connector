@@ -30,7 +30,7 @@ class TestTenant(TestCase):
                                 'status': 'aps:provisioning',
                                 'subscription': '555'},
                         config.diskspace_resource: {'limit': 1000},
-                        'accountinfo': {'techContact': {'email': 'new-tenant@fallball.io'}},
+                        'accountinfo': {'addressPostal': {'postalCode': '11111'}},
                         'account': {'aps': {'id': 555}}})
         self.new_tenant_no_email = \
             json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
@@ -44,26 +44,26 @@ class TestTenant(TestCase):
                                 'status': 'aps:provisioning',
                                 'subscription': '555'},
                         config.users_resource: {'limit': 10},
-                        'accountinfo': {'techContact': {'email': 'new-tenant@fallball.io'}},
+                        'accountinfo': {'addressPostal': {'postalCode': '11111'}},
                         'account': {'aps': {'id': 555}}})
         self.diskless_tenant = \
             json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
                                 'status': 'aps:provisioning',
                                 'subscription': '555'},
-                        'accountinfo': {'techContact': {'email': 'new-tenant@fallball.io'}},
+                        'accountinfo': {'addressPostal': {'postalCode': '11111'}},
                         'account': {'aps': {'id': 555}}})
         self.reprovisioning_tenant = \
             json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
                                 'status': 'aps:provisioning',
                                 'subscription': '555'},
-                        'accountinfo': {'techContact': {'email': 'new-tenant@fallball.io'}},
+                        'accountinfo': {'addressPostal': {'postalCode': '11111'}},
                         'status': 'activationRequired',
                         'account': {'aps': {'id': 555}}})
         self.reprovisioned_tenant = \
             json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
                                 'status': 'aps:ready',
                                 'subscription': '555'},
-                        'accountinfo': {'techContact': {'email': 'new-tenant@fallball.io'}},
+                        'accountinfo': {'addressPostal': {'postalCode': '11111'}},
                         'status': 'reprovisioned',
                         'account': {'aps': {'id': 555}}})
         self.users_changed_notification = '{}'
@@ -80,7 +80,9 @@ class TestTenant(TestCase):
         fb_client_mock = FbClient_mock.return_value
         fb_client_mock.name = 'fake_company_name'
         fb_client_mock.reseller = Reseller('fake_reseller')
-        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company'},
+        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
+                                             'techContact': {'email': 'new-tenant@fallball.io'},
+                                             'addressPostal': {'postalCode': '11111'}},
                                             {'subscriptionId': 555}]
         res = self.client.post('/v1/tenant', headers=self.headers, data=self.new_tenant)
         fb_client_mock.create.assert_called()
@@ -122,7 +124,8 @@ class TestTenant(TestCase):
         fb_client_mock.name = 'fake_company_name'
         fb_client_mock.reseller = Reseller('fake_reseller')
         OA_mock.get_resource.side_effect = [
-            {'companyName': 'fake_company', 'techContact': {'email': 'tenant-tech@fallball.io'}},
+            {'companyName': 'fake_company', 'techContact': {'email': 'tenant-tech@fallball.io'},
+             'addressPostal': {'postalCode': '11111'}},
             {'subscriptionId': 555}]
         res = self.client.post('/v1/tenant', headers=self.headers, data=self.new_tenant_no_email)
         fb_client_mock.create.assert_called()
@@ -136,10 +139,12 @@ class TestTenant(TestCase):
         fb_client_mock.name = 'fake_company_name'
         fb_client_mock.reseller = Reseller('fake_reseller')
         response = MagicMock()
-        response.json.return_value = {'email': 'No dots allowed'}
+        response.json.return_value = {'postal_code': '999 is not allowed'}
         fb_client_mock.create.side_effect = HttpClientError(response=response)
-        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company'},
+        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
+                                             'techContact': {'email': 'new-tenant@fallball.io'}},
                                             {'subscriptionId': 555}]
+
         res = self.client.post('/v1/tenant', headers=self.headers, data=self.new_tenant)
         fb_client_mock.create.assert_called()
 
@@ -158,7 +163,9 @@ class TestTenant(TestCase):
         response.text = 'Something went wrong'
         response.status_code = 400
         fb_client_mock.create.side_effect = HttpClientError(response=response)
-        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company'},
+        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
+                                             'techContact': {'email': 'new-tenant@fallball.io'},
+                                             'addressPostal': {'postalCode': '11111'}},
                                             {'subscriptionId': 555}]
         res = self.client.post('/v1/tenant', headers=self.headers, data=self.new_tenant)
         fb_client_mock.create.assert_called()
@@ -177,7 +184,9 @@ class TestTenant(TestCase):
         response.text = 'Something went wrong'
         response.status_code = 500
         fb_client_mock.create.side_effect = HttpServerError(response=response)
-        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company'},
+        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
+                                             'techContact': {'email': 'new-tenant@fallball.io'},
+                                             'addressPostal': {'postalCode': '11111'}},
                                             {'subscriptionId': 555}]
         res = self.client.post('/v1/tenant', headers=self.headers, data=self.new_tenant)
         fb_client_mock.create.assert_called()
@@ -191,7 +200,10 @@ class TestTenant(TestCase):
         fb_client_mock = FbClient_mock.return_value
         fb_client_mock.name = 'fake_company_name'
         fb_client_mock.reseller = Reseller('fake_reseller')
-        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company'},
+        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
+                                             'techContact': {'email': 'new-tenant@fallball.io'},
+                                             'addressPostal': {'postalCode': '11111'},
+                                             },
                                             {'subscriptionId': 555}]
         res = self.client.post('/v1/tenant', headers=self.headers, data=self.fb_client_with_users)
         fb_client_mock.create.assert_called()
@@ -204,7 +216,10 @@ class TestTenant(TestCase):
         fb_client_mock = FbClient_mock.return_value
         fb_client_mock.name = 'fake_company_name'
         fb_client_mock.reseller = Reseller('fake_reseller')
-        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company'},
+        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
+                                             'techContact': {'email': 'new-tenant@fallball.io'},
+                                             'addressPostal': {'postalCode': '11111'}
+                                             },
                                             {'subscriptionId': 555}]
         res = self.client.post('/v1/tenant', headers=self.headers, data=self.diskless_tenant)
         fb_client_mock.create.assert_called()
@@ -417,14 +432,16 @@ class TestTenant(TestCase):
         fb_client_mock.name = 'fake_company_name'
         fb_client_mock.reseller = Reseller('fake_reseller')
         OA_mock.get_resource.side_effect = [json.loads(self.reprovisioning_tenant),
-                                            {'companyName': 'fake_company'},
+                                            {'companyName': 'fake_company',
+                                             'techContact': {'email': 'new-tenant@fallball.io'},
+                                             'addressPostal': {'postalCode': '11111'}},
                                             {'subscriptionId': 555}]
 
         resp = self.client.post('/v1/tenant/123/reprovision', headers=self.headers,
                                 data=self.reprovisioning_tenant)
 
         tenant_body = {'status': 'reprovisioned',
-                       'accountinfo': {'techContact': {'email': 'new-tenant@fallball.io'}},
+                       'accountinfo': {'addressPostal': {'postalCode': '11111'}},
                        'statusData': {'messages': [], 'perPropertyData': []},
                        'tenantId': 'fake_company_name'}
         OA_mock.send_request.assert_called_with('PUT', '/aps/2/application/tenant/123', tenant_body)

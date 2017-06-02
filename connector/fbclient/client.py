@@ -15,6 +15,7 @@ class ClientSchema(Schema):
     users_by_type = fields.Nested(UsersByTypeSchema)
     storage = fields.Nested(StorageSchema)
     is_integrated = fields.Bool()
+    postal_code = fields.Str()
 
     @post_load
     def make_client(self, data):
@@ -35,7 +36,7 @@ class Client(object):
     users_by_type = None
 
     def __init__(self, reseller=None, name=None, email=None, is_integrated=True, users_amount=None,
-                 storage=None, users_by_type=None):
+                 storage=None, users_by_type=None, postal_code=None):
         self.reseller = reseller
         self.name = name
         self.email = email
@@ -43,6 +44,7 @@ class Client(object):
         self.users_amount = users_amount
         self.storage = storage
         self.users_by_type = users_by_type
+        self.postal_code = postal_code
 
     def api(self):
         return self.reseller.api().resellers(self.reseller.name)
