@@ -109,9 +109,9 @@ def analyze_service_error(data):
                                 'ru_RU': u"Пожалуйста, предоставьте дополнительные данные "
                                          u"для завершения создания сервиса FallBall",
                                 'fr_FR': u"Veuillez fournir des informations supplémentaires pour "
-                                         u"compléter l'approvisionnement du service FallBall"
-                            }
-                        }
+                                         u"compléter l'approvisionnement du service FallBall",
+                            },
+                        },
                     ],
                     'perPropertyData': [
                         {
@@ -124,12 +124,12 @@ def analyze_service_error(data):
                                              u"Сервис временно не доступен для Аляски",
                                     'fr_FR': u"Code Postal ne doit pas commencer par 999. "
                                              u"Le Service n'est pas disponible "
-                                             u"en Alaska actuellement"
-                                }
+                                             u"en Alaska actuellement",
+                                },
                             },
                             'pattern': r'(\d{5})'
-                        }
-                    ]
+                        },
+                    ],
                 }}
         return AnalysisResult(True, info)
     return AnalysisResult(False, {})
@@ -166,9 +166,9 @@ def provision_fallball_client(args):
     info = {
         'accountinfo': {
             'addressPostal': {
-                  'postalCode': postal_code
+                  'postalCode': postal_code,
             },
-        }
+        },
     }
 
     sub_id = OA.get_resource(args.sub_id)['subscriptionId']
@@ -215,7 +215,7 @@ def provision_fallball_client(args):
                                'status': status,
                                'statusData': {
                                    'messages': [],
-                                   'perPropertyData': []
+                                   'perPropertyData': [],
                                }}, 201, None)
 
 
