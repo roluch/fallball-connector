@@ -113,7 +113,7 @@ class TestUser(TestCase):
         fb_user_mock = make_fallball_user_mock.return_value
         fb_user_mock.client.name = 'fake_client'
         fb_user_mock.login_link.return_value = 'login_link'
-        res = self.client.get('/v1/user/123/login', headers=self.headers)
+        res = self.client.get('/v1/user/123/userlogin', headers=self.headers)
         assert b'login_link' in res.data
 
     @patch('connector.v1.resources.user.OA')
