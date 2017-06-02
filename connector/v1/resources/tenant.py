@@ -62,7 +62,7 @@ def make_default_fallball_admin(client):
     email = 'admin@{client_name}.{reseller_name}.fallball.io'.format(
         client_name=escape_domain_name(client.name),
         reseller_name=escape_domain_name(client.reseller.name))
-    user_id = uuid.UUID(hashlib.md5(email).hexdigest())
+    user_id = uuid.UUID(hashlib.md5(email.encode()).hexdigest())
     user = FbUser(client=client, user_id=user_id, email=email, admin=True, storage={'limit': 0})
     return user
 
