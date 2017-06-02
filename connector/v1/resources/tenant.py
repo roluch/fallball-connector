@@ -94,7 +94,7 @@ def get_tenant_args():
 
 
 def analyze_service_error(data):
-    if len(data) == 1 and 'postalCode' in data:
+    if len(data) == 1 and 'postal_code' in data:
         info = {'status': 'activationRequired',
                 'statusData': {
                     'code': 'ActivationData',
@@ -155,7 +155,7 @@ def provision_fallball_client(args):
     company_name = urlify(company_info['companyName'])
     admin_email = company_info['techContact']['email']
 
-    if args.account_info['addressPostal'].get('postalCode'):
+    if 'addressPostal' in args.account_info and args.account_info['addressPostal'].get('postalCode'):
         postal_code = args.account_info['addressPostal']['postalCode']
     else:
         postal_code = company_info['addressPostal']['postalCode']

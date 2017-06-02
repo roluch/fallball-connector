@@ -15,6 +15,7 @@ class ClientSchema(Schema):
     users_by_type = fields.Nested(UsersByTypeSchema)
     storage = fields.Nested(StorageSchema)
     is_integrated = fields.Bool()
+    postal_code = fields.Str()
 
     @post_load
     def make_client(self, data):
