@@ -75,17 +75,21 @@ class TestTenant(TestCase):
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.OA')
+    @patch('connector.v1.resources.tenant.make_default_fallball_admin')
     @patch('connector.v1.resources.tenant.Client')
-    def test_new_tenant(self, FbClient_mock, OA_mock):
+    def test_new_tenant(self, FbClient_mock, make_admin_mock, OA_mock):
         fb_client_mock = FbClient_mock.return_value
         fb_client_mock.name = 'fake_company_name'
         fb_client_mock.reseller = Reseller('fake_reseller')
+        fb_admin_mock = make_admin_mock.return_value
         OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
                                              'techContact': {'email': 'new-tenant@fallball.io'},
                                              'addressPostal': {'postalCode': '11111'}},
                                             {'subscriptionId': 555}]
         res = self.client.post('/v1/tenant', headers=self.headers, data=self.new_tenant)
         fb_client_mock.create.assert_called()
+        make_admin_mock.assert_called()
+        fb_admin_mock.update.assert_called()
         assert res.status_code == 201
 
     @bypass_auth
