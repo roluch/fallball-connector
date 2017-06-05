@@ -5,6 +5,7 @@ import os
 import re
 import uuid
 
+from functools import partial
 from flask import g
 
 logger = logging.getLogger(__file__)
@@ -12,7 +13,7 @@ logger = logging.getLogger(__file__)
 
 class ResellerNameFilter(logging.Filter):
     def filter(self, record):
-        record.reseller_name = str(g.reseller_name)
+        record.reseller_name = str(getattr(g, 'reseller_name', None))
         return True
 
 
@@ -75,14 +76,39 @@ def log_request(request):
 
 
 def log_response(response):
-    logger.debug({"request_id": g.request_id,
+    logger.debug({"request_id": getattr(g, 'request_id', None),
                   "type": "response",
                   "app": "fallball_connector",
                   "status_code": response.status_code,
                   "status": response.status,
                   "headers": dict(response.headers),
                   "data": response.data.decode('utf-8'),
-                  "company": g.company_name})
+                  "company": getattr(g, 'company_name', None)})
+
+
+def log_outgoing_request(request, where='unknown'):
+    logger.debug({"request_id": getattr(g, 'request_id', None),
+                  "type": "{}_request".format(where),
+                  "app": "fallball_connector",
+                  "method": request.method,
+                  "url": request.url,
+                  "headers": dict(request.headers),
+                  "data": request.body})
+
+
+def log_outgoing_response(response, where='unknown'):
+    logger.debug({"request_id": getattr(g, 'request_id', None),
+                  "type": "{}_response".format(where),
+                  "app": "fallball_connector",
+                  "status": response.status_code,
+                  "headers": dict(response.headers),
+                  "data": response.content.decode()})
+
+
+log_oa_request = partial(log_outgoing_request, where='oa')
+log_oa_response = partial(log_outgoing_response, where='oa')
+log_fallball_request = partial(log_outgoing_request, where='fallball')
+log_fallball_response = partial(log_outgoing_response, where='fallball')
 
 
 def escape_domain_name(name):

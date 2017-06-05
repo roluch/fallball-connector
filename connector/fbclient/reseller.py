@@ -1,11 +1,11 @@
-import slumber
-
 from marshmallow import Schema, fields, post_load, pre_dump
 
 from slumber.exceptions import HttpNotFoundError
 
 from connector.fbclient import FallBallAuth, StorageSchema
 from connector.fbclient import config
+
+from . import LoggingApi
 
 
 class ResellerSchema(Schema):
@@ -44,7 +44,7 @@ class Reseller(object):
 
     def api(self, token=None):
         token = token if token else self.token
-        return slumber.API(config.fallball_service_url, auth=FallBallAuth(token))
+        return LoggingApi(config.fallball_service_url, auth=FallBallAuth(token))
 
     def __repr__(self):
         return '<Reseller(name={})>'.format(self.name)
@@ -77,8 +77,8 @@ class Reseller(object):
 
     @staticmethod
     def all():
-        api = slumber.API(config.fallball_service_url,
-                          auth=FallBallAuth(config.fallball_service_authorization_token))
+        api = LoggingApi(config.fallball_service_url,
+                         auth=FallBallAuth(config.fallball_service_authorization_token))
         result = api.resellers.get()
         resellers = ResellerSchema().load(result, many=True).data
         return resellers

@@ -3,6 +3,7 @@ import re
 import json
 
 import requests
+from requests import Request, Session
 
 try:
     from functools import reduce
@@ -20,6 +21,8 @@ from flask import g, request
 from flask_restful import Resource
 
 from slumber.exceptions import HttpClientError, HttpServerError
+
+from connector.utils import log_oa_request, log_oa_response
 
 ErrorResponse = namedtuple("ErrorResponse", "status_code text")
 
@@ -156,36 +159,39 @@ class OA(object):
         headers = {'Content-Type': 'application/json'}
         if impersonate_as:
             headers['aps-resource-id'] = impersonate_as
-        if transaction:
+        if transaction and request.headers.get('aps-transaction-id'):
             headers['aps-transaction-id'] = request.headers.get('aps-transaction-id')
 
         data = None if body is None else json.dumps(body)
 
         retry_num = retry_num if retry_num > 0 else 1
 
-        while retry_num > 0:
-            retry_num -= 1
-            try:
-                resp = requests.request(
-                    method=method,
-                    url=url,
-                    data=data,
-                    headers=headers,
-                    auth=g.auth,
-                    timeout=OA.request_timeout,
-                    verify=False
-                )
-            except requests.exceptions.Timeout:
-                err = ErrorResponse(None, 'Request to OA timed out. '
-                                          'Timeout: {}'.format(OA.request_timeout))
-                raise OACommunicationException(err)
-            except Exception as e:
-                err = ErrorResponse(None, str(e))
-                raise OACommunicationException(err)
+        with Session() as s:
+            prepared = Request(
+                method=method,
+                url=url,
+                data=data,
+                headers=headers,
+                auth=g.auth
+            ).prepare()
 
-            if resp.status_code == 200:
-                return resp.json()
-            elif resp.status_code != 400:
-                raise OACommunicationException(resp)
+            while retry_num > 0:
+                retry_num -= 1
+                try:
+                    log_oa_request(prepared)
+                    resp = s.send(prepared, timeout=OA.request_timeout, verify=False)
+                    log_oa_response(resp)
+                except requests.exceptions.Timeout:
+                    err = ErrorResponse(None, 'Request to OA timed out. '
+                                              'Timeout: {}'.format(OA.request_timeout))
+                    raise OACommunicationException(err)
+                except Exception as e:
+                    err = ErrorResponse(None, str(e))
+                    raise OACommunicationException(err)
 
-        raise OACommunicationException(resp)
+                if resp.status_code == 200:
+                    return resp.json()
+                elif resp.status_code != 400:
+                    raise OACommunicationException(resp)
+
+            raise OACommunicationException(resp)
