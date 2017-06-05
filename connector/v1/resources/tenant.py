@@ -63,7 +63,8 @@ def make_default_fallball_admin(client):
         client_name=escape_domain_name(client.name),
         reseller_name=escape_domain_name(client.reseller.name))
     user_id = uuid.UUID(hashlib.md5(email.encode()).hexdigest())
-    user = FbUser(client=client, user_id=user_id, email=email, admin=True, storage={'limit': 0})
+    user = FbUser(client=client, user_id=user_id, email=email, superadmin=True,
+                  storage={'limit': 0})
     return user
 
 
@@ -196,9 +197,8 @@ def provision_fallball_client(args):
         info.update(report_error(str(e)))
         return ProvisioningResult(info, 500, {})
 
-    if not user_integration_enabled:
-        user = make_default_fallball_admin(client)
-        user.update()
+    user = make_default_fallball_admin(client)
+    user.update()
 
     OA.subscribe_on(args.aps_id, 'http://aps-standard.org/core/events/linked',
                     relation='users',

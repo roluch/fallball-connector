@@ -9,6 +9,7 @@ class UserSchema(Schema):
     password = fields.Str()
     storage = fields.Nested(StorageSchema)
     admin = fields.Bool()
+    superadmin = fields.Bool()
     profile_type = fields.Str()
 
     @post_load
@@ -29,12 +30,13 @@ class User(object):
     profile_type = None
 
     def __init__(self, client=None, user_id=None, email=None, password=None, admin=None,
-                 storage=None, profile_type=None):
+                 superadmin=None, storage=None, profile_type=None):
         self.client = client
         self.user_id = user_id
         self.email = email
         self.password = password
         self.admin = admin
+        self.superadmin = superadmin
         self.storage = storage
         self.profile_type = profile_type
 
@@ -67,7 +69,8 @@ class User(object):
         result = api.users(self.user_id).get()
         u = UserSchema().load(result).data
         self.__init__(self.client, user_id=u.user_id, email=u.email, password=u.password,
-                      admin=u.admin, storage=u.storage, profile_type=u.profile_type)
+                      admin=u.admin, superadmin=u.superadmin, storage=u.storage,
+                      profile_type=u.profile_type)
 
     def delete(self):
         api = self.api()
