@@ -4,8 +4,8 @@ import json
 import os
 import re
 import uuid
-
 from functools import partial
+
 from flask import g
 
 logger = logging.getLogger(__file__)
@@ -66,7 +66,7 @@ logger.addHandler(stream)
 
 
 def log_request(request):
-    logger.debug({"request_id": g.request_id,
+    logger.debug({"request_id": getattr(g, 'request_id', None),
                   "type": "request",
                   "app": "fallball_connector",
                   "method": request.method,

@@ -1,13 +1,11 @@
+import slumber
+from slumber import exceptions
 from marshmallow import Schema, fields
 
+from requests import Request
 from requests.auth import AuthBase
 
 from connector.config import Config
-
-import slumber
-from slumber import exceptions
-from requests import Request
-
 from connector.utils import log_fallball_request, log_fallball_response
 
 config = Config()
