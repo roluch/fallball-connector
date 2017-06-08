@@ -9,6 +9,7 @@ from flask_restful import reqparse, request
 from slumber.exceptions import HttpClientError
 
 from connector.config import Config
+from connector.error_codes import ACTIVATION_ERROR
 from connector.fbclient.user import User as FbUser
 from connector.fbclient.client import Client
 from connector.utils import escape_domain_name
@@ -122,8 +123,7 @@ def analyze_service_error(data):
                     ],
                 }}
 
-        # E1002 is error code for zip with 999 at start
-        if data['postal_code']['code'] == 'E1002':
+        if data['postal_code']['code'] == ACTIVATION_ERROR:
             info['statusData']['perPropertyData'][0]['message'] = {
                 'text': "Postal code should not start with 999. "
                         "Service is not available for Alaska currently",
