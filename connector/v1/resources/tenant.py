@@ -122,7 +122,8 @@ def analyze_service_error(data):
                     ],
                 }}
 
-        if data['postal_code'][0] == 'Postal code can\'t starts with 999':
+        # E1002 is error code for zip with 999 at start
+        if data['postal_code']['code'] == 'E1002':
             info['statusData']['perPropertyData'][0]['message'] = {
                 'text': "Postal code should not start with 999. "
                         "Service is not available for Alaska currently",

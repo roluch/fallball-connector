@@ -143,7 +143,12 @@ class TestTenant(TestCase):
         fb_client_mock.name = 'fake_company_name'
         fb_client_mock.reseller = Reseller('fake_reseller')
         response = MagicMock()
-        response.json.return_value = {'postal_code': '999 is not allowed'}
+
+        response.json.return_value = {'postal_code': {
+            'code': 'E1002',
+            'message': "Postal code can't start with 999"}
+        }
+
         fb_client_mock.create.side_effect = HttpClientError(response=response)
         OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
                                              'techContact': {'email': 'new-tenant@fallball.io'}},
@@ -163,7 +168,12 @@ class TestTenant(TestCase):
         fb_client_mock.name = 'fake_company_name'
         fb_client_mock.reseller = Reseller('fake_reseller')
         response = MagicMock()
-        response.json.return_value = {'postal_code': 'Postal code must be a 5-digit number'}
+
+        response.json.return_value = {'postal_code': {
+            'code': 'E1001',
+            'message': "Postal code must be a 5-digit number"}
+        }
+
         fb_client_mock.create.side_effect = HttpClientError(response=response)
         OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
                                              'techContact': {'email': 'new-tenant@fallball.io'}},
