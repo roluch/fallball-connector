@@ -9,6 +9,7 @@ from flask_restful import reqparse, request
 from slumber.exceptions import HttpClientError
 
 from connector.config import Config
+from connector.error_codes import ACTIVATION_ERROR
 from connector.fbclient.user import User as FbUser
 from connector.fbclient.client import Client
 from connector.utils import escape_domain_name
@@ -117,21 +118,32 @@ def analyze_service_error(data):
                     'perPropertyData': [
                         {
                             'propertyName': 'accountinfo.addressPostal.postalCode',
-                            'message': {
-                                'text': "Postal code should not start with 999. "
-                                        "Service is not available for Alaska currently",
-                                'textLocalized': {
-                                    'ru_RU': u"Почтовый индес не должен начинаться с 999. "
-                                             u"Сервис временно не доступен для Аляски",
-                                    'fr_FR': u"Code Postal ne doit pas commencer par 999. "
-                                             u"Le Service n'est pas disponible "
-                                             u"en Alaska actuellement",
-                                },
-                            },
-                            'pattern': r'(\d{5})'
+                            'pattern': r'(\d{5})',
                         },
                     ],
                 }}
+
+        if data['postal_code']['code'] == ACTIVATION_ERROR:
+            info['statusData']['perPropertyData'][0]['message'] = {
+                'text': "Postal code should not start with 999. "
+                        "Service is not available for Alaska currently",
+                'textLocalized': {
+                    'ru_RU': u"Почтовый индес не должен начинаться с 999. "
+                             u"Сервис временно не доступен для Аляски",
+                    'fr_FR': u"Code Postal ne doit pas commencer par 999. "
+                             u"Le Service n'est pas disponible "
+                             u"en Alaska actuellement",
+                },
+            }
+        else:
+            info['statusData']['perPropertyData'][0]['message'] = {
+                'text': "The postal code must consist of five digits",
+                'textLocalized': {
+                   'ru_RU': u"Почтовый индес должен состоять из пяти цифр.",
+                   'fr_FR': u"Le code postal doit être composé de cinq chiffres.",
+                },
+            }
+
         return AnalysisResult(True, info)
     return AnalysisResult(False, {})
 
