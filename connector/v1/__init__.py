@@ -1,5 +1,3 @@
-import sys
-import logging
 from collections import namedtuple
 
 from flask import Blueprint, g, request
@@ -8,7 +6,7 @@ from requests_oauthlib import OAuth1
 from faker import Faker
 
 from connector.config import Config
-from connector.utils import log_request, log_response, guid
+from connector.utils import log_request, log_response
 from connector.validator import check_oauth_signature, get_client_key
 from connector.fbclient.reseller import Reseller
 
@@ -22,10 +20,7 @@ from connector.v1.resources.tenant import (Tenant, TenantAdminLogin, TenantDisab
                                            TenantUserRemoved, TenantOnUsersChange)
 from connector.v1.resources.user import User, UserList, UserLogin
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-stream = logging.StreamHandler(sys.stdout)
-logger.addHandler(stream)
+from connector.utils import logger
 
 fake = Faker()
 api_bp = Blueprint('v1', __name__)
@@ -66,7 +61,8 @@ def get_reseller_info():
 
 @api_bp.before_request
 def before_request():
-    g.request_id = guid()
+    g.log = dict()
+    g.log['out'] = list()
 
     g.endpoint = request.endpoint
     if request.blueprint:
@@ -76,7 +72,7 @@ def before_request():
     g.reseller_name = reseller_info.name
     g.company_name = 'N/A'
 
-    log_request(request)
+    g.log['request'] = log_request(request)
 
     if not reseller_info.name:
         allow_public_endpoints_only()
@@ -96,7 +92,8 @@ def before_request():
 
 @api_bp.after_request
 def after_request(response):
-    log_response(response)
+    g.log['response'] = log_response(response)
+    logger.debug(g.log)
     return response
 
 
@@ -127,10 +124,10 @@ resource_routes = {
 class FallballApi(Api):
     def handle_error(self, e):
         code = getattr(e, 'code', 500)
-        return self.make_response({'message': str(e),
-                                   'error': type(e).__name__},
-                                  code)
-
+        response = self.make_response({'message': str(e),
+                                       'error': type(e).__name__},
+                                      code)
+        return response
 
 api = FallballApi(api_bp, catch_all_404s=True)
 

@@ -145,7 +145,6 @@ class TestOA(TestCase):
     @patch('connector.v1.resources.request')
     @patch('connector.v1.resources.g')
     def test_send_request(self, flask_g_mock, flask_request_mock, session_mock):
-        flask_g_mock.request_id = '123'
         fake_headers = {
             'aps-resource-id': 'fake_impersonation_resource_id',
             'aps-transaction-id': 'fake_transaction_id',

@@ -5,8 +5,10 @@ from marshmallow import Schema, fields
 from requests import Request
 from requests.auth import AuthBase
 
+from flask import g
+
 from connector.config import Config
-from connector.utils import log_fallball_request, log_fallball_response
+from connector.utils import log_outgoing_request, log_outgoing_response
 
 config = Config()
 
@@ -41,9 +43,10 @@ class LoggingResource(slumber.Resource):
                       headers=headers)
         s = self._store["session"]
         prepped = s.prepare_request(req)
-        log_fallball_request(prepped)
+        g.log['out'].append(dict(request=None, response=None))
+        g.log['out'][-1]['request'] = log_outgoing_request(prepped)
         resp = s.send(prepped)
-        log_fallball_response(resp)
+        g.log['out'][-1]['response'] = log_outgoing_response(resp)
 
         if 400 <= resp.status_code <= 499:
             exception_class = exceptions.HttpNotFoundError if resp.status_code == 404 \

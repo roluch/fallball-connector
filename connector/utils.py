@@ -4,7 +4,6 @@ import json
 import os
 import re
 import uuid
-from functools import partial
 
 from flask import g
 
@@ -66,49 +65,49 @@ logger.addHandler(stream)
 
 
 def log_request(request):
-    logger.debug({"request_id": getattr(g, 'request_id', None),
-                  "type": "request",
-                  "app": "fallball_connector",
-                  "method": request.method,
-                  "url": request.url,
-                  "headers": dict(request.headers),
-                  "data": request.data.decode('utf-8')})
+    return {"type": "request",
+            "app": "fallball_connector",
+            "method": request.method,
+            "url": request.url,
+            "headers": dict(request.headers),
+            "data": request.data.decode('utf-8')}
 
 
 def log_response(response):
-    logger.debug({"request_id": getattr(g, 'request_id', None),
-                  "type": "response",
-                  "app": "fallball_connector",
-                  "status_code": response.status_code,
-                  "status": response.status,
-                  "headers": dict(response.headers),
-                  "data": response.data.decode('utf-8'),
-                  "company": getattr(g, 'company_name', None)})
+    if response.content_type == 'application/json':
+        try:
+            data = json.loads(response.data)
+        except:
+            data = response.data.decode()
+    else:
+        data = response.data.decode()
+
+    return {"type": "response",
+            "app": "fallball_connector",
+            "status_code": response.status_code,
+            "status": response.status,
+            "headers": dict(response.headers),
+            "data": data,
+            "company": getattr(g, 'company_name', None)}
 
 
-def log_outgoing_request(request, where='unknown'):
-    logger.debug({"request_id": getattr(g, 'request_id', None),
-                  "type": "{}_request".format(where),
-                  "app": "fallball_connector",
-                  "method": request.method,
-                  "url": request.url,
-                  "headers": dict(request.headers),
-                  "data": request.body})
+def log_outgoing_request(request):
+    return {"app": "fallball_connector",
+            "method": request.method,
+            "url": request.url,
+            "headers": dict(request.headers),
+            "data": request.body}
 
 
-def log_outgoing_response(response, where='unknown'):
-    logger.debug({"request_id": getattr(g, 'request_id', None),
-                  "type": "{}_response".format(where),
-                  "app": "fallball_connector",
-                  "status": response.status_code,
-                  "headers": dict(response.headers),
-                  "data": response.content.decode()})
-
-
-log_oa_request = partial(log_outgoing_request, where='oa')
-log_oa_response = partial(log_outgoing_response, where='oa')
-log_fallball_request = partial(log_outgoing_request, where='fallball')
-log_fallball_response = partial(log_outgoing_response, where='fallball')
+def log_outgoing_response(response):
+    try:
+        data = json.loads(response.content)
+    except:
+        data = response.content.decode()
+    return {"app": "fallball_connector",
+            "status": response.status_code,
+            "headers": dict(response.headers),
+            "data": data}
 
 
 def escape_domain_name(name):

@@ -22,7 +22,7 @@ from flask_restful import Resource
 
 from slumber.exceptions import HttpClientError, HttpServerError
 
-from connector.utils import log_oa_request, log_oa_response
+from connector.utils import log_outgoing_request, log_outgoing_response
 
 ErrorResponse = namedtuple("ErrorResponse", "status_code text")
 
@@ -178,9 +178,10 @@ class OA(object):
             while retry_num > 0:
                 retry_num -= 1
                 try:
-                    log_oa_request(prepared)
+                    g.log['out'].append(dict(request=None, response=None))
+                    g.log['out'][-1]['request'] = log_outgoing_request(prepared)
                     resp = s.send(prepared, timeout=OA.request_timeout, verify=False)
-                    log_oa_response(resp)
+                    g.log['out'][-1]['response'] = log_outgoing_response(resp)
                 except requests.exceptions.Timeout:
                     err = ErrorResponse(None, 'Request to OA timed out. '
                                               'Timeout: {}'.format(OA.request_timeout))
