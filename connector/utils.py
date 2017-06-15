@@ -51,7 +51,7 @@ class JsonLogFormatter(logging.Formatter):
             resp['message'] = record.msg
         else:
             resp['message'] = record.getMessage()
-        resp['time'] = self.formatTime(record, self.datefmt)
+        resp['time'] = datetime.datetime.now().isoformat(' ')
         resp['level'] = record.levelname
         resp['reseller_id'] = record.reseller_name
         return json.dumps(resp)
