@@ -1,4 +1,5 @@
 import logging
+import datetime
 import sys
 import json
 import os
@@ -23,7 +24,7 @@ class ConnectorLogFormatter(logging.Formatter):
             resp['message'] = record.msg
         else:
             resp['message'] = record.getMessage()
-        resp['time'] = self.formatTime(record, self.datefmt)
+        resp['time'] = datetime.datetime.now().isoformat(' ')
         resp['level'] = record.levelname
         resp['reseller_id'] = record.reseller_name
 
@@ -70,6 +71,7 @@ def log_request(request):
             "method": request.method,
             "url": request.url,
             "headers": dict(request.headers),
+            "time": datetime.datetime.now().isoformat(' '),
             "data": request.data.decode('utf-8')}
 
 
@@ -87,6 +89,7 @@ def log_response(response):
             "status_code": response.status_code,
             "status": response.status,
             "headers": dict(response.headers),
+            "time": datetime.datetime.now().isoformat(' '),
             "data": data,
             "company": getattr(g, 'company_name', None)}
 
@@ -96,6 +99,7 @@ def log_outgoing_request(request):
             "method": request.method,
             "url": request.url,
             "headers": dict(request.headers),
+            "time": datetime.datetime.now().isoformat(' '),
             "data": request.body}
 
 
@@ -107,6 +111,7 @@ def log_outgoing_response(response):
     return {"app": "fallball_connector",
             "status": response.status_code,
             "headers": dict(response.headers),
+            "time": datetime.datetime.now().isoformat(' '),
             "data": data}
 
 
