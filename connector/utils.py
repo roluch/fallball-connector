@@ -66,13 +66,20 @@ logger.addHandler(stream)
 
 
 def log_request(request):
+    if request.data:
+        try:
+            data = json.loads(request.data)
+        except:
+            data = request.data.decode('utf-8')
+    else:
+        data = request.data.decode('utf-8')
     return {"type": "request",
             "app": "fallball_connector",
             "method": request.method,
             "url": request.url,
             "headers": dict(request.headers),
             "time": datetime.datetime.now().isoformat(' '),
-            "data": request.data.decode('utf-8')}
+            "data": data}
 
 
 def log_response(response):
