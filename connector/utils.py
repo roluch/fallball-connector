@@ -106,7 +106,7 @@ def log_outgoing_request(request):
             "method": request.method,
             "url": request.url,
             "headers": dict(request.headers),
-            "time": datetime.datetime.now().isoformat(' '),
+            "time": datetime.datetime.now().time().isoformat(),
             "data": request.body}
 
 
@@ -118,7 +118,7 @@ def log_outgoing_response(response):
     return {"app": "fallball_connector",
             "status": response.status_code,
             "headers": dict(response.headers),
-            "time": datetime.datetime.now().isoformat(' '),
+            "time": datetime.datetime.now().time().isoformat(),
             "data": data}
 
 
