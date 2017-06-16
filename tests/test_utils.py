@@ -3,7 +3,6 @@ from logging import LogRecord
 from connector.app import app
 from connector.utils import ConnectorLogFormatter, JsonLogFormatter
 from datetime import datetime
-import time
 
 
 class TestUtils(TestCase):
@@ -17,11 +16,10 @@ class TestUtils(TestCase):
         record = LogRecord('fake_name', 'DEBUG', None, None, 'fake_message',
                            None, None)
         record.reseller_name = 'fake_reseller_name'
-        record.created = time.mktime(datetime(2017, 1, 1).timetuple())
         # as return result of formatter.format is a string we will check the substring
         actual_record = formatter.format(record)
         assert 'fake_reseller_name' in actual_record
-        assert '2017-01-01' in actual_record
+        assert datetime.now().isoformat(' ')[:-7] in actual_record
         record.msg = {
             'text': 'fake_text'
         }
@@ -33,11 +31,10 @@ class TestUtils(TestCase):
         record = LogRecord('fake_name', 'DEBUG', None, None, 'fake_message',
                            None, None)
         record.reseller_name = 'fake_reseller_name'
-        record.created = time.mktime(datetime(2017, 1, 1).timetuple())
         # as return result of formatter.format is a string we will check the substring
         actual_record = formatter.format(record)
         assert 'fake_reseller_name' in actual_record
-        assert '2017-01-01' in actual_record
+        assert datetime.now().isoformat(' ')[:-7] in actual_record
         record.msg = {
             'text': 'fake_text'
         }
@@ -50,12 +47,11 @@ class TestUtils(TestCase):
         record = LogRecord('fake_name', 'DEBUG', None, None, message,
                            None, None)
         record.reseller_name = 'fake_reseller_name'
-        record.created = time.mktime(datetime(2017, 1, 1).timetuple())
         # as return result of formatter.format is a string we will check the substring
         actual_record = formatter.format(record)
         assert 'fake_reseller_name' in actual_record
         assert 'MESSAGE_TYPE' in actual_record
-        assert '2017-01-01' in actual_record
+        assert datetime.now().isoformat(' ')[:-7] in actual_record
         record.msg = {
             'text': 'fake_text'
         }

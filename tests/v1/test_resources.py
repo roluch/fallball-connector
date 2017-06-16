@@ -1,5 +1,3 @@
-import json
-
 from flask_testing import TestCase
 
 from mock import patch, ANY, MagicMock, call
@@ -143,18 +141,17 @@ class TestOA(TestCase):
                                              transaction=False, retry_num=5)
 
     @bypass_auth
-    @patch('connector.v1.resources.requests')
+    @patch('connector.v1.resources.Session')
     @patch('connector.v1.resources.request')
     @patch('connector.v1.resources.g')
-    def test_send_request(self, flask_g_mock, flask_request_mock, requests_mock):
-        flask_g_mock.auth = 'fake_auth'
+    def test_send_request(self, flask_g_mock, flask_request_mock, session_mock):
         fake_headers = {
             'aps-resource-id': 'fake_impersonation_resource_id',
             'aps-transaction-id': 'fake_transaction_id',
             'Content-Type': 'application/json'
         }
         flask_request_mock.headers = {
-            'aps-controller-uri': 'fake_aps_controller_uri',
+            'aps-controller-uri': 'https://fake_aps_controller_uri',
             'aps-transaction-id': fake_headers['aps-transaction-id']
         }
         expected_body = {
@@ -171,21 +168,21 @@ class TestOA(TestCase):
         status_200_mock.status_code = 200
         status_400_mock.status_code = 400
         status_500_mock.status_code = 500
-        requests_mock.request.side_effect = [status_500_mock, status_400_mock, status_200_mock]
+        send_mock = MagicMock()
+        send_mock.side_effect = [status_500_mock, status_400_mock, status_200_mock]
+        session_mock.return_value.__enter__.return_value.send = send_mock
+
         with self.assertRaises(OACommunicationException):
             OA.send_request('post', 'fake_path', transaction=False)
         OA.send_request('post', 'fake_path', body=expected_body, transaction=True,
                         impersonate_as='fake_impersonation_resource_id', retry_num=2)
 
-        fake_call = call(method='post',
-                         url='fake_path',
-                         data=json.dumps(expected_body), headers=fake_headers,
-                         auth=ANY, timeout=ANY,
+        fake_call = call(ANY, timeout=ANY,
                          verify=False)
         # as we have retry_num == 2 request must be called 2 times
-        requests_mock.request.assert_has_calls([fake_call, fake_call])
+        send_mock.assert_has_calls([fake_call, fake_call])
 
         # check for OACommunicationException if number of attempts exceeded
-        requests_mock.request.side_effect = [status_400_mock, status_400_mock]
+        send_mock.side_effect = [status_400_mock, status_400_mock]
         with self.assertRaises(OACommunicationException):
             OA.send_request('post', 'fake_path', body=expected_body, retry_num=1)
