@@ -1,4 +1,5 @@
 import logging
+import datetime
 import sys
 import json
 import os
@@ -12,7 +13,7 @@ logger = logging.getLogger(__file__)
 
 class ResellerNameFilter(logging.Filter):
     def filter(self, record):
-        record.reseller_name = str(g.reseller_name)
+        record.reseller_name = str(getattr(g, 'reseller_name', None))
         return True
 
 
@@ -23,7 +24,7 @@ class ConnectorLogFormatter(logging.Formatter):
             resp['message'] = record.msg
         else:
             resp['message'] = record.getMessage()
-        resp['time'] = self.formatTime(record, self.datefmt)
+        resp['time'] = datetime.datetime.now().isoformat(' ')
         resp['level'] = record.levelname
         resp['reseller_id'] = record.reseller_name
 
@@ -50,7 +51,7 @@ class JsonLogFormatter(logging.Formatter):
             resp['message'] = record.msg
         else:
             resp['message'] = record.getMessage()
-        resp['time'] = self.formatTime(record, self.datefmt)
+        resp['time'] = datetime.datetime.now().isoformat(' ')
         resp['level'] = record.levelname
         resp['reseller_id'] = record.reseller_name
         return json.dumps(resp)
@@ -65,24 +66,60 @@ logger.addHandler(stream)
 
 
 def log_request(request):
-    logger.debug({"request_id": g.request_id,
-                  "type": "request",
-                  "app": "fallball_connector",
-                  "method": request.method,
-                  "url": request.url,
-                  "headers": dict(request.headers),
-                  "data": request.data.decode('utf-8')})
+    if request.data:
+        try:
+            data = json.loads(request.data)
+        except:
+            data = request.data.decode('utf-8')
+    else:
+        data = request.data.decode('utf-8')
+    return {"type": "request",
+            "app": "fallball_connector",
+            "method": request.method,
+            "url": request.url,
+            "headers": dict(request.headers),
+            "time": datetime.datetime.now().isoformat(' '),
+            "data": data}
 
 
 def log_response(response):
-    logger.debug({"request_id": g.request_id,
-                  "type": "response",
-                  "app": "fallball_connector",
-                  "status_code": response.status_code,
-                  "status": response.status,
-                  "headers": dict(response.headers),
-                  "data": response.data.decode('utf-8'),
-                  "company": g.company_name})
+    if response.content_type == 'application/json':
+        try:
+            data = json.loads(response.data)
+        except:
+            data = response.data.decode()
+    else:
+        data = response.data.decode()
+
+    return {"type": "response",
+            "app": "fallball_connector",
+            "status_code": response.status_code,
+            "status": response.status,
+            "headers": dict(response.headers),
+            "time": datetime.datetime.now().isoformat(' '),
+            "data": data,
+            "company": getattr(g, 'company_name', None)}
+
+
+def log_outgoing_request(request):
+    return {"app": "fallball_connector",
+            "method": request.method,
+            "url": request.url,
+            "headers": dict(request.headers),
+            "time": datetime.datetime.now().isoformat(' '),
+            "data": request.body}
+
+
+def log_outgoing_response(response):
+    try:
+        data = json.loads(response.content)
+    except:
+        data = response.content.decode()
+    return {"app": "fallball_connector",
+            "status": response.status_code,
+            "headers": dict(response.headers),
+            "time": datetime.datetime.now().isoformat(' '),
+            "data": data}
 
 
 def escape_domain_name(name):
