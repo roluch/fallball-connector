@@ -11,7 +11,7 @@ config = Config()
 
 
 def generate_limit(user_type):
-    return 10 if user_type == 'default' else len(user_type) * 10
+    return 10 if user_type == 'USERS' else len(user_type) + 10
 
 
 class UserList(ConnectorResource):
