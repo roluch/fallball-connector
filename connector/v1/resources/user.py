@@ -65,15 +65,19 @@ class User(ConnectorResource):
 
     def put(self, user_id):
         parser = reqparse.RequestParser()
-        parser.add_argument('resource', dest='user_type', type=str,
-                            required=False, default='default')
+        parser.add_argument('resource', dest='user_type', type=str, required=True)
         args = parser.parse_args()
         user = make_fallball_user(user_id)
         user.refresh()
         client = user.client
         client.refresh()
         g.company_name = client.name
-        user.storage['limit'] = 0 if client.storage['limit'] == 0 else generate_limit(args.user_type)
+
+        if client.storage['limit'] == 0:
+            user.storage['limit'] = 0
+        else:
+            user.storage['limit'] = generate_limit(args.user_type)
+
         user.profile_type = args.user_type
 
         # we can't merge 2 requests into one as we don't know user.aps.type
