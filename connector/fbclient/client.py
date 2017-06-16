@@ -3,16 +3,11 @@ from marshmallow import Schema, fields, post_load, pre_dump
 from connector.fbclient import StorageSchema
 
 
-class UsersByTypeSchema(Schema):
-    default = fields.Int(load_only=True)
-    gold = fields.Int(load_only=True)
-
-
 class ClientSchema(Schema):
     name = fields.Str()
     email = fields.Email()
     users_amount = fields.Int(load_only=True)
-    users_by_type = fields.Nested(UsersByTypeSchema)
+    users_by_type = fields.Dict()
     storage = fields.Nested(StorageSchema)
     is_integrated = fields.Bool()
     postal_code = fields.Str()

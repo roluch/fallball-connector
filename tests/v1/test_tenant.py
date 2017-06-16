@@ -43,7 +43,7 @@ class TestTenant(TestCase):
             json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
                                 'status': 'aps:provisioning',
                                 'subscription': '555'},
-                        config.users_resource: {'limit': 10},
+                        'USERS': {'limit': 10},
                         'accountinfo': {'addressPostal': {'postalCode': '11111'}},
                         'account': {'aps': {'id': 555}}})
         self.diskless_tenant = \
@@ -67,9 +67,6 @@ class TestTenant(TestCase):
                         'status': 'reprovisioned',
                         'account': {'aps': {'id': 555}}})
         self.users_changed_notification = '{}'
-        self.config_without_gold = Config()
-        self.config_without_gold.gold_users_resource = ''
-        self.config_with_gold = Config()
 
         return app
 
@@ -79,6 +76,7 @@ class TestTenant(TestCase):
     @patch('connector.v1.resources.tenant.Client')
     def test_new_tenant(self, FbClient_mock, make_admin_mock, OA_mock):
         fb_client_mock = FbClient_mock.return_value
+        fb_client_mock.storage = {'usage': 1}
         fb_client_mock.name = 'fake_company_name'
         fb_client_mock.reseller = Reseller('fake_reseller')
         fb_admin_mock = make_admin_mock.return_value
@@ -125,6 +123,7 @@ class TestTenant(TestCase):
     @patch('connector.v1.resources.tenant.Client')
     def test_new_tenant_no_email(self, FbClient_mock, OA_mock):
         fb_client_mock = FbClient_mock.return_value
+        fb_client_mock.storage = {'usage': 1}
         fb_client_mock.name = 'fake_company_name'
         fb_client_mock.reseller = Reseller('fake_reseller')
         OA_mock.get_resource.side_effect = [
@@ -234,6 +233,7 @@ class TestTenant(TestCase):
     @patch('connector.v1.resources.tenant.Client')
     def test_new_fb_client_users(self, FbClient_mock, OA_mock):
         fb_client_mock = FbClient_mock.return_value
+        fb_client_mock.storage = {'usage': 1}
         fb_client_mock.name = 'fake_company_name'
         fb_client_mock.reseller = Reseller('fake_reseller')
         OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
@@ -250,6 +250,7 @@ class TestTenant(TestCase):
     @patch('connector.v1.resources.tenant.Client')
     def test_new_fb_client_no_diskspace(self, FbClient_mock, OA_mock):
         fb_client_mock = FbClient_mock.return_value
+        fb_client_mock.storage = {'usage': 1}
         fb_client_mock.name = 'fake_company_name'
         fb_client_mock.reseller = Reseller('fake_reseller')
         OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
@@ -257,39 +258,36 @@ class TestTenant(TestCase):
                                              'addressPostal': {'postalCode': '11111'}
                                              },
                                             {'subscriptionId': 555}]
+        OA_mock.is_application_support_users.return_value = True
         res = self.client.post('/v1/tenant', headers=self.headers, data=self.diskless_tenant)
         fb_client_mock.create.assert_called()
         assert res.status_code == 201
 
     @bypass_auth
+    @patch('connector.v1.resources.tenant.OA')
     @patch('connector.v1.resources.tenant.get_name_for_tenant')
     @patch('connector.v1.resources.tenant.Client')
-    def test_resource_usage(self, FbClient_mock, get_name_for_fb_client_mock):
-        # until config will be configured by DevPortal each the model is changed t
-        # he code below won't work
-        #
-        # orig_gold_users_resource = config_from_tenant.gold_users_resource
-        # config_from_tenant.gold_users_resource = ''
+    def test_resource_usage(self, FbClient_mock, get_name_for_fb_client_mock, OA_mock):
         fb_client_mock = FbClient_mock.return_value
         get_name_for_fb_client_mock.return_value = 'fake_client'
         fb_client_mock.users_by_type = {
-            'default': 1,
-            'gold': 2
+            'PLATINUM': 1,
+            'BRONZE': 2
         }
         fb_client_mock.storage = {'usage': 1}
+        OA_mock.get_user_resources.return_value = ['PLATINUM', 'BRONZE']
+
         res = self.client.get('/v1/tenant/123', headers=self.headers)
         data = res.json
         assert data[config.diskspace_resource]['usage'] == 1
-        assert data[config.users_resource]['usage'] == 1
+        assert data['PLATINUM']['usage'] == 1
+        assert data['BRONZE']['usage'] == 2
         assert res.status_code == 200
-        # until config will be configured by DevPortal each the model is changed t
-        # he code below won't work
-        #
-        # config_from_tenant.gold_users_resource = orig_gold_users_resource
-        # fb_client_mock.users_by_type['gold'] = 2
-        # res = self.client.get('/v1/tenant/123', headers=self.headers)
-        # data = res.json
-        # assert data[config.gold_users_resource]['usage'] == 2
+
+        fb_client_mock.users_by_type['BRONZE'] = 4
+        res = self.client.get('/v1/tenant/123', headers=self.headers)
+        data = res.json
+        assert data['BRONZE']['usage'] == 4
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.get_name_for_tenant')
@@ -416,44 +414,40 @@ class TestTenant(TestCase):
         fb_client_mock = FbClient_mock.return_value
         get_name_for_fb_client_mock.return_value = 'fake_client'
         flask_g_mock.reseller = Reseller('fake_reseller')
-        config_from_tenant.gold_users_resource = ''
         fb_client_mock.users_by_type = {
-            'default': 1
+            'BRILLIANT_USERS': 1
         }
         fb_client_mock.storage = {'usage': 1}
         tenant = {
             config.devices_resource: {
                 'usage': 0
             },
-            config.users_resource: {
+            'BRILLIANT_USERS': {
                 'usage': 1
             },
             config.diskspace_resource: {
                 'usage': 1
             }
         }
+        OA_mock.get_user_resources.return_value = ['BRILLIANT_USERS']
         self.client.post('/v1/tenant/123/onUsersChange',
                          headers=self.headers, data='{}')
         OA_mock.send_request.assert_called_with('put',
                                                 'aps/2/application/tenant/123',
                                                 tenant)
 
-        # until config will be configured by DevPortal each the model is changed t
-        # he code below won't work
-        #
-        # orig_gold_users_resource = config_from_tenant.gold_users_resource
-        # config_from_tenant.gold_users_resource = orig_gold_users_resource
-        # fb_client_mock.users_by_type['gold'] = 2
-        #
-        # tenant[config.gold_users_resource] = {
-        #   'usage': 2
-        # # }
-        #
-        # self.client.post('/v1/tenant/123/onUsersChange',
-        #                  headers=self.headers, data='{}')
-        # OA_mock.send_request.assert_called_with('put',
-        #                                         'aps/2/application/tenant/123',
-        #                                         tenant)
+        fb_client_mock.users_by_type['SILVER_USERS'] = 2
+        OA_mock.get_user_resources.return_value = ['BRILLIANT_USERS', 'SILVER_USERS']
+
+        tenant['SILVER_USERS'] = {
+          'usage': 2
+        }
+
+        self.client.post('/v1/tenant/123/onUsersChange',
+                         headers=self.headers, data='{}')
+        OA_mock.send_request.assert_called_with('put',
+                                                'aps/2/application/tenant/123',
+                                                tenant)
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.FbUser')
@@ -467,6 +461,8 @@ class TestTenant(TestCase):
         fb_client_mock = FbClient_mock.return_value
         fb_client_mock.name = 'fake_company_name'
         fb_client_mock.reseller = Reseller('fake_reseller')
+        fb_client_mock.storage = {'usage': 1}
+
         OA_mock.get_resource.side_effect = [json.loads(self.reprovisioning_tenant),
                                             {'companyName': 'fake_company',
                                              'techContact': {'email': 'new-tenant@fallball.io'},
@@ -476,7 +472,8 @@ class TestTenant(TestCase):
         resp = self.client.post('/v1/tenant/123/reprovision', headers=self.headers,
                                 data=self.reprovisioning_tenant)
 
-        tenant_body = {'status': 'reprovisioned',
+        tenant_body = {'status': 'reprovisioned', 'DISKSPACE': {'usage': 1},
+                       'DEVICES': {'usage': 0},
                        'accountinfo': {'addressPostal': {'postalCode': '11111'}},
                        'statusData': {'messages': [], 'perPropertyData': []},
                        'tenantId': 'fake_company_name'}

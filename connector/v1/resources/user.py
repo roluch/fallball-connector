@@ -4,22 +4,14 @@ from flask_restful import reqparse
 from connector.config import Config
 from connector.fbclient.client import Client
 from connector.fbclient.user import User as FbUser
-from connector.v1.resources.tenant import get_name_for_tenant,\
-    sync_tenant_usage_with_client
+from connector.v1.resources.tenant import get_name_for_tenant, sync_tenant_usage_with_client
 from . import ConnectorResource, OA, parameter_validator
 
 config = Config()
 
 
-def get_limit(user_type):
-    return config.gold_user_limit if user_type == config.gold_users_resource \
-        else config.default_user_limit
-
-
-user_types = {
-    config.users_resource: 'default',
-    config.gold_users_resource: 'gold'
-}
+def generate_limit(user_type):
+    return 10 if user_type == 'default' else len(user_type) * 10
 
 
 class UserList(ConnectorResource):
@@ -36,7 +28,7 @@ class UserList(ConnectorResource):
                             type=parameter_validator('aps', 'id'),
                             required=True,
                             help='Missing aps.id in request')
-        parser.add_argument('resource', dest='user_type', type=str, required=False)
+        parser.add_argument('resource', dest='user_type', type=str, required=True)
         args = parser.parse_args()
 
         company_name = g.company_name = get_name_for_tenant(args.tenant_id)
@@ -46,12 +38,12 @@ class UserList(ConnectorResource):
         # There should not be failures if diskspace resource is removed but users are still enabled.
         # Set 0 limit for clients and all users in this scenario.
         client.refresh()
-        limit = 0 if client.storage['limit'] == 0 else get_limit(args.user_type)
+        limit = 0 if client.storage['limit'] == 0 else generate_limit(args.user_type)
 
         oa_user = OA.get_resource(args.user_id)
         user = FbUser(client, email=oa_user['email'], admin=oa_user['isAccountAdmin'],
                       storage={'limit': limit},
-                      profile_type=user_types.get(args.user_type, 'default'))
+                      profile_type=args.user_type)
 
         user.create()
 
@@ -73,16 +65,16 @@ class User(ConnectorResource):
 
     def put(self, user_id):
         parser = reqparse.RequestParser()
-        parser.add_argument('resource', dest='user_type', type=str, required=False)
+        parser.add_argument('resource', dest='user_type', type=str,
+                            required=False, default='default')
         args = parser.parse_args()
         user = make_fallball_user(user_id)
         user.refresh()
         client = user.client
         client.refresh()
         g.company_name = client.name
-        user.storage['limit'] = 0 if client.storage['limit'] == 0 else get_limit(args.user_type)
-        if args.user_type in user_types:
-            user.profile_type = user_types.get(args.user_type)
+        user.storage['limit'] = 0 if client.storage['limit'] == 0 else generate_limit(args.user_type)
+        user.profile_type = args.user_type
 
         # we can't merge 2 requests into one as we don't know user.aps.type
         #   /aps/2/resources?aps.id=user_id,select(tenant,user) won't work
@@ -92,8 +84,7 @@ class User(ConnectorResource):
         oa_tenant_id = OA.get_resources('/aps/2/resources/{}/tenant'
                                         .format(user_id))[0]['aps']['id']
         user.update()
-        if args.user_type in user_types:
-            sync_tenant_usage_with_client(oa_tenant_id, client)
+        sync_tenant_usage_with_client(oa_tenant_id, client)
 
         send_after_put_notification(oa_user)
         return {}, 200

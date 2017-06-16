@@ -189,3 +189,25 @@ class OA(object):
                 raise OACommunicationException(resp)
 
         raise OACommunicationException(resp)
+
+    @staticmethod
+    @Memoize
+    def get_application_schema():
+        return OA.send_request('get', 'aps/2/application', transaction=False)
+
+    @staticmethod
+    def is_application_support_users():
+        return True if OA.get_application_schema().get('user') else False
+
+    @staticmethod
+    @Memoize
+    def get_user_schema():
+        user_schema = {}
+        user_schema_uri = OA.get_application_schema().get('user', {}).get('schema')
+        if user_schema_uri:
+            user_schema = OA.send_request('get', user_schema_uri, transaction=False)
+        return user_schema
+
+    @staticmethod
+    def get_user_resources():
+        return OA.get_user_schema().get('properties', {}).get('resource', {}).get('enum', [])

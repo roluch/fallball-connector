@@ -22,8 +22,8 @@ class TestUser(TestCase):
         self.user_service = {'aps': {'type': 'http://new.app/user-service/1.0'},
                              'tenant': {'aps': {'id': '123'}},
                              'userId': '3c9ed599-cd79-4222-beb0-be83f9dc8078',
-                             'user': {'aps': {'id': '123'}
-                                      }
+                             'user': {'aps': {'id': '123'}},
+                             'resource': 'USERS'
                              }
         self.headers = {'Content-type': 'application/json',
                         'aps-instance-id': '123-123-123',
@@ -65,21 +65,21 @@ class TestUser(TestCase):
         assert res.status_code == 204
 
     @bypass_auth
+    @patch('connector.v1.resources.tenant.OA')
     @patch('connector.v1.resources.user.OA')
     @patch('connector.v1.resources.user.make_fallball_user')
-    def test_update_user(self, make_fallball_user_mock, OA_mock):
+    def test_update_user(self, make_fallball_user_mock, OA_user_mock, OA_tenant_mock):
         fb_user_mock = make_fallball_user_mock.return_value
         fb_user_mock.client.name = 'fake_client'
-        OA_mock.get_resources.return_value = [self.oa_user]
+        OA_user_mock.get_resources.return_value = [self.oa_user]
         fb_user_mock.client.users_by_type = {
-            'default': 1,
-            'gold': 2
+            'BRONZE_USERS': 1,
+            'SILVER_USERS': 2
         }
         fb_user_mock.client.storage = {
             'usage': 1,
             'limit': 1
         }
-        config.gold_users_resource = ''
         res = self.client.put('/v1/user/123', headers=self.headers, data='{}')
         assert res.status_code == 200
 
@@ -90,13 +90,12 @@ class TestUser(TestCase):
     def test_update_user_with_profiles(self, make_fallball_user_mock, OA_mock, OA_tenant_mock):
         fb_user_mock = make_fallball_user_mock.return_value
         fb_user_mock.client.name = 'fake_client'
-        config.gold_users_resource = 'GOLD_USERS'
         user_payload = json.dumps({
-            'resource': config.gold_users_resource
+            'resource': 'SILVER_USERS'
         })
         fb_user_mock.client.users_by_type = {
-            'default': 1,
-            'gold': 2
+            'BRONZE_USERS': 1,
+            'SILVER_USERS': 2
         }
         fb_user_mock.client.storage = {
             'usage': 1,

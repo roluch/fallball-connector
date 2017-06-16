@@ -31,11 +31,7 @@ class Config(object):
     conf_file = os.environ.get('CONFIG_FILE', './config.yml')
     debug = False
     diskspace_resource = None
-    default_user_limit = None
-    gold_user_limit = None
     devices_resource = None
-    users_resource = None
-    gold_users_resource = None
     fallball_service_url = None
     fallball_service_authorization_token = None
     oauth_key = None
@@ -52,14 +48,10 @@ class Config(object):
 
         with open(Config.conf_file, 'r') as c:
             config = yaml.load(c)
-            Config.default_user_limit = config.get('default_user_limit', 10)
-            Config.gold_user_limit = config.get('gold_user_limit', 15)
-            Config.gold_users_resource = config.get('gold_users_resource', 'GOLD_USERS')
             Config.debug = bool(config.get('debug', False))
 
             try:
                 Config.diskspace_resource = config['diskspace_resource']
-                Config.users_resource = config['users_resource']
                 Config.devices_resource = config['devices_resource']
                 Config.fallball_service_url = config['fallball_service_url']
                 Config.fallball_service_authorization_token = \
