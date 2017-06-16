@@ -35,7 +35,7 @@ def sync_tenant_usage_with_client(tenant_id, client):
     client.refresh()
     tenant = {
         config.users_resource: {
-            'usage': client.users_by_type['default']
+            'usage': client.users_by_type.get('default', 0)
         },
         config.diskspace_resource: {
             'usage': client.storage['usage']
@@ -251,7 +251,7 @@ class Tenant(ConnectorResource):
         client.refresh()
         tenant = {
             config.users_resource: {
-                'usage': client.users_by_type['default']
+                'usage': client.users_by_type.get('default', 0)
             },
             config.diskspace_resource: {
                 'usage': client.storage['usage']
@@ -263,7 +263,7 @@ class Tenant(ConnectorResource):
         user_profiles_supported = bool(config.gold_users_resource)
         if user_profiles_supported:
             tenant[config.gold_users_resource] = {
-                'usage': client.users_by_type['gold']
+                'usage': client.users_by_type.get('gold', 0)
             }
         return tenant
 
