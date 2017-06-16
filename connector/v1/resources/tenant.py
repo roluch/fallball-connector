@@ -230,6 +230,7 @@ def provision_fallball_client(args):
 
     return ProvisioningResult(tenant, 201, None)
 
+
 class TenantList(ConnectorResource):
     def post(self):
         args = get_tenant_args()

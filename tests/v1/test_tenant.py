@@ -12,7 +12,6 @@ from connector.v1.resources import OACommunicationException
 from connector.v1.resources.tenant import get_name_for_tenant
 from tests.v1.utils import bypass_auth
 
-from connector.v1.resources.tenant import config as config_from_tenant
 
 config = Config()
 
