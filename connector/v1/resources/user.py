@@ -65,7 +65,7 @@ class User(ConnectorResource):
 
     def put(self, user_id):
         parser = reqparse.RequestParser()
-        parser.add_argument('resource', dest='user_type', type=str, required=True)
+        parser.add_argument('resource', dest='user_type', type=str, required=False)
         args = parser.parse_args()
         user = make_fallball_user(user_id)
         user.refresh()
