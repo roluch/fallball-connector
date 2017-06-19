@@ -73,12 +73,13 @@ class User(ConnectorResource):
         client.refresh()
         g.company_name = client.name
 
-        if client.storage['limit'] == 0:
-            user.storage['limit'] = 0
-        else:
-            user.storage['limit'] = generate_limit(args.user_type)
+        if args.user_type:
+            if client.storage['limit'] == 0:
+                user.storage['limit'] = 0
+            else:
+                user.storage['limit'] = generate_limit(args.user_type)
 
-        user.profile_type = args.user_type
+            user.profile_type = args.user_type
 
         # we can't merge 2 requests into one as we don't know user.aps.type
         #   /aps/2/resources?aps.id=user_id,select(tenant,user) won't work
