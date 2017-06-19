@@ -1,6 +1,7 @@
 from collections import namedtuple
 import re
 import json
+from time import time
 
 import requests
 from requests import Request, Session
@@ -26,16 +27,32 @@ from connector.utils import log_outgoing_request, log_outgoing_response
 
 ErrorResponse = namedtuple("ErrorResponse", "status_code text")
 
+OA_CACHE_LIFETIME = 30  # seconds
+
 
 class Memoize(object):
     def __init__(self, function):
+        self.timeout = 0
         self.function = function
         self.memoized = {}
+        self.memoized_ts = {}
 
     def __call__(self, *args):
-        if args not in self.memoized:
+        now = time()
+
+        if args not in self.memoized or \
+                self.timeout and now > self.memoized_ts[args] + self.timeout:
             self.memoized[args] = self.function(*args)
+            self.memoized_ts[args] = now
+
         return self.memoized[args]
+
+
+class Memoize_timeout(Memoize):
+    def __init__(self, function):
+        super(Memoize_timeout, self).__init__(function)
+        self.timeout = OA_CACHE_LIFETIME
+
 
 
 def parameter_validator(*args):
@@ -198,7 +215,7 @@ class OA(object):
             raise OACommunicationException(resp)
 
     @staticmethod
-    @Memoize
+    @Memoize_timeout
     def get_application_schema():
         return OA.send_request('get', 'aps/2/application', transaction=False)
 
@@ -207,7 +224,7 @@ class OA(object):
         return True if OA.get_application_schema().get('user') else False
 
     @staticmethod
-    @Memoize
+    @Memoize_timeout
     def get_user_schema():
         user_schema = {}
         user_schema_uri = OA.get_application_schema().get('user', {}).get('schema')
