@@ -54,7 +54,6 @@ class Memoize_timeout(Memoize):
         self.timeout = OA_CACHE_LIFETIME
 
 
-
 def parameter_validator(*args):
     def extract_params(where, *args):
         def extract_one(where, what):
