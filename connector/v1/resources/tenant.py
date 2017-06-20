@@ -32,28 +32,7 @@ def get_name_for_tenant(tenant_id):
 
 
 def sync_tenant_usage_with_client(tenant_id, client):
-    client.refresh()
-    tenant = {
-        config.users_resource: {
-            'usage': client.users_by_type.get('default', 0)
-        },
-        config.diskspace_resource: {
-            'usage': client.storage['usage']
-        },
-        config.devices_resource: {
-            'usage': 0
-        }
-    }
-
-    # On the TestLab the fallball connector is not reconfigured each time the model is changed
-    #   the property 'gold_users_resource' will always be filled
-    # so the code below will raise an exception if only one User counter is supported
-    # user_profiles_supported = bool(config.gold_users_resource)
-    # if user_profiles_supported:
-    #     tenant[config.gold_users_resource] = {
-    #         'usage': client.users_by_type['gold']
-    #     }
-
+    tenant = build_usage(client)
     OA.send_request('put',
                     'aps/2/application/tenant/{}'.format(tenant_id),
                     tenant)
@@ -89,10 +68,10 @@ def get_tenant_args():
 
     parser.add_argument(config.diskspace_resource, dest='storage_limit',
                         type=parameter_validator('limit'))
-    parser.add_argument(config.users_resource, dest='users_limit',
-                        type=parameter_validator('limit'))
-    parser.add_argument(config.gold_users_resource, dest='gold_users_limit',
-                        type=parameter_validator('limit'))
+
+    for user_resource in OA.get_user_resources():
+        parser.add_argument(user_resource, dest='{}_limit'.format(user_resource.lower()),
+                            type=parameter_validator('limit'))
 
     return parser.parse_args()
 
@@ -129,7 +108,7 @@ def analyze_service_error(data):
                         "Service is not available for Alaska currently",
                 'textLocalized': {
                     'ru_RU': u"Почтовый индес не должен начинаться с 999. "
-                             u"Сервис временно не доступен для Аляски",
+                             u"Сервис временно недоступен для Аляски",
                     'fr_FR': u"Code Postal ne doit pas commencer par 999. "
                              u"Le Service n'est pas disponible "
                              u"en Alaska actuellement",
@@ -139,13 +118,31 @@ def analyze_service_error(data):
             info['statusData']['perPropertyData'][0]['message'] = {
                 'text': "The postal code must consist of five digits",
                 'textLocalized': {
-                   'ru_RU': u"Почтовый индес должен состоять из пяти цифр.",
+                   'ru_RU': u"Почтовый индекс должен состоять из пяти цифр.",
                    'fr_FR': u"Le code postal doit être composé de cinq chiffres.",
                 },
             }
 
         return AnalysisResult(True, info)
     return AnalysisResult(False, {})
+
+
+def build_usage(client):
+    client.refresh()
+    tenant = {
+        config.diskspace_resource: {
+            'usage': client.storage['usage']
+        },
+        config.devices_resource: {
+            'usage': 0
+        }
+    }
+    for user_type in OA.get_user_resources():
+        tenant[user_type] = {
+            'usage': client.users_by_type.get(user_type, 0)
+        }
+
+    return tenant
 
 
 def report_error(message):
@@ -164,8 +161,6 @@ def report_error(message):
 
 
 def provision_fallball_client(args):
-    user_integration_enabled = bool(args.users_limit) or bool(args.gold_users_limit)
-
     company_info = OA.get_resource(args.acc_id)
     company_name = urlify(company_info['companyName'])
     admin_email = company_info['techContact']['email']
@@ -189,7 +184,7 @@ def provision_fallball_client(args):
     g.company_name = company_name
     storage_limit = args.storage_limit if args.storage_limit else 0
 
-    client = Client(g.reseller, name=company_name, is_integrated=user_integration_enabled,
+    client = Client(g.reseller, name=company_name, is_integrated=OA.is_application_support_users(),
                     storage={'limit': storage_limit}, email=admin_email, postal_code=postal_code)
 
     try:
@@ -223,12 +218,17 @@ def provision_fallball_client(args):
 
     status = 'reprovisioned' if args.status else ''
 
-    return ProvisioningResult({'tenantId': client.name,
-                               'status': status,
-                               'statusData': {
-                                   'messages': [],
-                                   'perPropertyData': [],
-                               }}, 201, None)
+    tenant = {
+        'tenantId': client.name,
+        'status': status,
+        'statusData': {
+           'messages': [],
+           'perPropertyData': [],
+        },
+    }
+    tenant.update(build_usage(client))
+
+    return ProvisioningResult(tenant, 201, None)
 
 
 class TenantList(ConnectorResource):
@@ -248,23 +248,7 @@ class Tenant(ConnectorResource):
     def get(self, tenant_id):
         company_name = g.company_name = get_name_for_tenant(tenant_id)
         client = Client(g.reseller, name=company_name)
-        client.refresh()
-        tenant = {
-            config.users_resource: {
-                'usage': client.users_by_type.get('default', 0)
-            },
-            config.diskspace_resource: {
-                'usage': client.storage['usage']
-            },
-            config.devices_resource: {
-                'usage': 0
-            }
-        }
-        user_profiles_supported = bool(config.gold_users_resource)
-        if user_profiles_supported:
-            tenant[config.gold_users_resource] = {
-                'usage': client.users_by_type.get('gold', 0)
-            }
+        tenant = build_usage(client)
         return tenant
 
     def put(self, tenant_id):

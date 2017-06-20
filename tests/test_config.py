@@ -31,11 +31,7 @@ class TestConfig(TestCase):
             'oauth_key': 'PUT_HERE_OAUTH_KEY',
             'oauth_secret': 'PUT_HERE_OAUTH_SECRET',
             'diskspace_resource': 'DISKSPACE',
-            'users_resource': 'USERS',
-            'gold_users_resource': 'GOLD_USERS',
             'devices_resource': 'DEVICES',
-            'default_user_limit': 10,
-            'gold_user_limit': 15
         })
 
         for (key, value) in viewitems(config.__dict__):

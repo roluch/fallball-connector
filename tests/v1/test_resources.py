@@ -186,3 +186,36 @@ class TestOA(TestCase):
         send_mock.side_effect = [status_400_mock, status_400_mock]
         with self.assertRaises(OACommunicationException):
             OA.send_request('post', 'fake_path', body=expected_body, retry_num=1)
+
+    @bypass_auth
+    @patch('connector.v1.resources.OA.get_application_schema')
+    def test_is_application_support_users(self, get_application_schema_mock):
+        get_application_schema_mock.return_value = {'user': 'somedata'}
+
+        self.assertTrue(OA.is_application_support_users())
+
+    @bypass_auth
+    @patch('connector.v1.resources.OA.get_application_schema')
+    def test_is_application_not_support_users(self, get_application_schema_mock):
+        get_application_schema_mock.return_value = {'app': 'somedata'}
+
+        self.assertFalse(OA.is_application_support_users())
+
+    @bypass_auth
+    @patch('connector.v1.resources.OA.get_application_schema')
+    @patch('connector.v1.resources.OA.send_request')
+    def test_get_user_schema(self, send_request_mock, get_application_schema_mock):
+        get_application_schema_mock.return_value = {'user': {'schema': 'schema_uri'}}
+        send_request_mock.return_value = {'user': 'test-data'}
+
+        schema = OA.get_user_schema()
+        send_request_mock.assert_called_with('get', 'schema_uri', transaction=False)
+        assert 'user' in schema
+
+    @bypass_auth
+    @patch('connector.v1.resources.OA.get_user_schema')
+    def test_get_user_resources(self, get_user_schema_mock):
+        get_user_schema_mock.return_value = {
+            'properties': {'resource': {'enum': ['SILVER', 'BRILLIANT']}}}
+
+        assert OA.get_user_resources() == ['SILVER', 'BRILLIANT']
