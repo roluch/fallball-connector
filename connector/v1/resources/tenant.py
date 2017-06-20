@@ -59,6 +59,9 @@ def get_tenant_args():
                         help='Missing aps.type in request')
     parser.add_argument('aps', dest='aps_status', type=parameter_validator('status'))
 
+    parser.add_argument('ENVIRONMENT', dest='environment', type=parameter_validator('limit'))
+    parser.add_argument('COUNTRY', dest='country', type=parameter_validator('limit'))
+
     parser.add_argument('account', dest='acc_id', type=parameter_validator('aps', 'id'),
                         required=True, help='Missing link to account in request')
 
@@ -184,8 +187,14 @@ def provision_fallball_client(args):
     g.company_name = company_name
     storage_limit = args.storage_limit if args.storage_limit else 0
 
+    country = None if args.country is None else config.country.get(args.country, None)
+
+    environment = None if args.environment is None \
+        else config.environment.get(args.environment, None)
+
     client = Client(g.reseller, name=company_name, is_integrated=OA.is_application_support_users(),
-                    storage={'limit': storage_limit}, email=admin_email, postal_code=postal_code)
+                    storage={'limit': storage_limit}, email=admin_email, postal_code=postal_code,
+                    country=country, environment=environment)
 
     try:
         client.create()

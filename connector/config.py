@@ -36,6 +36,8 @@ class Config(object):
     fallball_service_authorization_token = None
     oauth_key = None
     oauth_secret = None
+    environment = None
+    country = None
 
     def __init__(self):
         if not Config.diskspace_resource:
@@ -49,6 +51,8 @@ class Config(object):
         with open(Config.conf_file, 'r') as c:
             config = yaml.load(c)
             Config.debug = bool(config.get('debug', False))
+            Config.environment = config.get('ENVIRONMENT', {})
+            Config.country = config.get('COUNTRY', {})
 
             try:
                 Config.diskspace_resource = config['diskspace_resource']

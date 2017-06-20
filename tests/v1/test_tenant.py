@@ -29,12 +29,23 @@ class TestTenant(TestCase):
                                 'status': 'aps:provisioning',
                                 'subscription': '555'},
                         config.diskspace_resource: {'limit': 1000},
+                        'COUNTRY': {'limit': 0},
+                        'ENVIRONMENT': {'limit': 0},
+                        'accountinfo': {'addressPostal': {'postalCode': '11111'}},
+                        'account': {'aps': {'id': 555}}})
+        self.new_tenant_no_params = \
+            json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
+                                'status': 'aps:provisioning',
+                                'subscription': '555'},
+                        config.diskspace_resource: {'limit': 1000},
                         'accountinfo': {'addressPostal': {'postalCode': '11111'}},
                         'account': {'aps': {'id': 555}}})
         self.new_tenant_no_email = \
             json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
                                 'status': 'aps:provisioning',
                                 'subscription': '555'},
+                        'COUNTRY': {'limit': 0},
+                        'ENVIRONMENT': {'limit': 0},
                         config.diskspace_resource: {'limit': 1000},
                         'accountinfo': {'techContact': {}},
                         'account': {'aps': {'id': 555}}})
@@ -49,12 +60,16 @@ class TestTenant(TestCase):
             json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
                                 'status': 'aps:provisioning',
                                 'subscription': '555'},
+                        'COUNTRY': {'limit': 0},
+                        'ENVIRONMENT': {'limit': 0},
                         'accountinfo': {'addressPostal': {'postalCode': '11111'}},
                         'account': {'aps': {'id': 555}}})
         self.reprovisioning_tenant = \
             json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
                                 'status': 'aps:provisioning',
                                 'subscription': '555'},
+                        'COUNTRY': {'limit': 0},
+                        'ENVIRONMENT': {'limit': 0},
                         'accountinfo': {'addressPostal': {'postalCode': '11111'}},
                         'status': 'activationRequired',
                         'account': {'aps': {'id': 555}}})
@@ -62,6 +77,8 @@ class TestTenant(TestCase):
             json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
                                 'status': 'aps:ready',
                                 'subscription': '555'},
+                        'COUNTRY': {'limit': 0},
+                        'ENVIRONMENT': {'limit': 0},
                         'accountinfo': {'addressPostal': {'postalCode': '11111'}},
                         'status': 'reprovisioned',
                         'account': {'aps': {'id': 555}}})
@@ -84,6 +101,26 @@ class TestTenant(TestCase):
                                              'addressPostal': {'postalCode': '11111'}},
                                             {'subscriptionId': 555}]
         res = self.client.post('/v1/tenant', headers=self.headers, data=self.new_tenant)
+        fb_client_mock.create.assert_called()
+        make_admin_mock.assert_called()
+        fb_admin_mock.update.assert_called()
+        assert res.status_code == 201
+
+    @bypass_auth
+    @patch('connector.v1.resources.tenant.OA')
+    @patch('connector.v1.resources.tenant.make_default_fallball_admin')
+    @patch('connector.v1.resources.tenant.Client')
+    def test_new_tenant_optional_params(self, FbClient_mock, make_admin_mock, OA_mock):
+        fb_client_mock = FbClient_mock.return_value
+        fb_client_mock.storage = {'usage': 1}
+        fb_client_mock.name = 'fake_company_name'
+        fb_client_mock.reseller = Reseller('fake_reseller')
+        fb_admin_mock = make_admin_mock.return_value
+        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
+                                             'techContact': {'email': 'new-tenant@fallball.io'},
+                                             'addressPostal': {'postalCode': '11111'}},
+                                            {'subscriptionId': 555}]
+        res = self.client.post('/v1/tenant', headers=self.headers, data=self.new_tenant_no_params)
         fb_client_mock.create.assert_called()
         make_admin_mock.assert_called()
         fb_admin_mock.update.assert_called()
