@@ -11,6 +11,8 @@ class ClientSchema(Schema):
     storage = fields.Nested(StorageSchema)
     is_integrated = fields.Bool()
     postal_code = fields.Str()
+    country = fields.Str(allow_none=True)
+    environment = fields.Str(allow_none=True)
 
     @post_load
     def make_client(self, data):
@@ -29,9 +31,12 @@ class Client(object):
     storage = None
     reseller = None
     users_by_type = None
+    country = None
+    environment = None
 
     def __init__(self, reseller=None, name=None, email=None, is_integrated=True, users_amount=None,
-                 storage=None, users_by_type=None, postal_code=None):
+                 storage=None, users_by_type=None, postal_code=None, country=None,
+                 environment=None):
         self.reseller = reseller
         self.name = name
         self.email = email
@@ -40,6 +45,8 @@ class Client(object):
         self.storage = storage
         self.users_by_type = users_by_type
         self.postal_code = postal_code
+        self.country = country
+        self.environment = environment
 
     def api(self):
         return self.reseller.api().resellers(self.reseller.name)
@@ -66,7 +73,8 @@ class Client(object):
         result = api.clients(self.name).get()
         c = ClientSchema().load(result).data
         self.__init__(self.reseller, name=c.name, email=c.email, is_integrated=c.is_integrated,
-                      users_amount=c.users_amount, storage=c.storage, users_by_type=c.users_by_type)
+                      users_amount=c.users_amount, storage=c.storage, users_by_type=c.users_by_type,
+                      country=c.country, environment=c.environment)
 
     def delete(self):
         api = self.api()
