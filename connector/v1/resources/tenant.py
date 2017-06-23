@@ -248,7 +248,8 @@ class TenantList(ConnectorResource):
         if args.status == 'reprovisioned':
             return {}, 201
         elif phase == 'async' and args.status != 'error':
-            return {}, 202, {'Aps-Info': "Additional information required to complete provisioning"}
+            return {}, 202, {'Aps-Info': "Additional information required to complete provisioning",
+                             'Aps-Retry-Timeout': 10}
 
         return provision_fallball_client(args)
 
