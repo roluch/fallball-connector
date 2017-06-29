@@ -63,6 +63,7 @@ def get_reseller_info():
 def before_request():
     g.log = dict()
     g.log['out'] = list()
+    g.log['request'] = log_request(request)
 
     g.endpoint = request.endpoint
     if request.blueprint:
@@ -71,8 +72,6 @@ def before_request():
     reseller_info = get_reseller_info()
     g.reseller_name = reseller_info.name
     g.company_name = 'N/A'
-
-    g.log['request'] = log_request(request)
 
     if not reseller_info.name:
         allow_public_endpoints_only()
