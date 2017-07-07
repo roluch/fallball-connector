@@ -51,8 +51,8 @@ class Config(object):
         with open(Config.conf_file, 'r') as c:
             config = yaml.load(c)
             Config.debug = bool(config.get('debug', False))
-            Config.environment = config.get('ENVIRONMENT', {})
-            Config.country = config.get('COUNTRY', {})
+            Config.environment = config.get('parameters', {}).get('ENVIRONMENT', {})
+            Config.country = config.get('parameters', {}).get('COUNTRY', {})
 
             try:
                 Config.diskspace_resource = config['diskspace_resource']
