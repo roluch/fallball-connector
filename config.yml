@@ -6,10 +6,11 @@ oauth_key: PUT_HERE_OAUTH_KEY
 oauth_secret: PUT_HERE_OAUTH_SECRET
 diskspace_resource: DISKSPACE
 devices_resource: DEVICES
-ENVIRONMENT:
-  0: PRODUCTION
-  1: TEST
-COUNTRY:
-  0: US
-  1: MX
-  2: CA
+parameters:
+  ENVIRONMENT:
+    0: PRODUCTION
+    1: TEST
+  COUNTRY:
+    0: US
+    1: MX
+    2: CA
