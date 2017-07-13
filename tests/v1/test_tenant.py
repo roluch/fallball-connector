@@ -31,14 +31,14 @@ class TestTenant(TestCase):
                         config.diskspace_resource: {'limit': 1000},
                         'COUNTRY': {'limit': 0},
                         'ENVIRONMENT': {'limit': 0},
-                        'accountinfo': {'addressPostal': {'postalCode': '11111'}},
+                        'accountInfo': {'addressPostal': {'postalCode': '11111'}},
                         'account': {'aps': {'id': 555}}})
         self.new_tenant_no_params = \
             json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
                                 'status': 'aps:provisioning',
                                 'subscription': '555'},
                         config.diskspace_resource: {'limit': 1000},
-                        'accountinfo': {'addressPostal': {'postalCode': '11111'}},
+                        'accountInfo': {'addressPostal': {'postalCode': '11111'}},
                         'account': {'aps': {'id': 555}}})
         self.new_tenant_no_email = \
             json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
@@ -47,14 +47,14 @@ class TestTenant(TestCase):
                         'COUNTRY': {'limit': 0},
                         'ENVIRONMENT': {'limit': 0},
                         config.diskspace_resource: {'limit': 1000},
-                        'accountinfo': {'techContact': {}},
+                        'accountInfo': {'techContact': {}},
                         'account': {'aps': {'id': 555}}})
         self.fb_client_with_users = \
             json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
                                 'status': 'aps:provisioning',
                                 'subscription': '555'},
                         'USERS': {'limit': 10},
-                        'accountinfo': {'addressPostal': {'postalCode': '11111'}},
+                        'accountInfo': {'addressPostal': {'postalCode': '11111'}},
                         'account': {'aps': {'id': 555}}})
         self.diskless_tenant = \
             json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
@@ -62,7 +62,7 @@ class TestTenant(TestCase):
                                 'subscription': '555'},
                         'COUNTRY': {'limit': 0},
                         'ENVIRONMENT': {'limit': 0},
-                        'accountinfo': {'addressPostal': {'postalCode': '11111'}},
+                        'accountInfo': {'addressPostal': {'postalCode': '11111'}},
                         'account': {'aps': {'id': 555}}})
         self.reprovisioning_tenant = \
             json.dumps({'aps': {'type': 'http://new.app', 'id': '123-123-123',
@@ -70,7 +70,7 @@ class TestTenant(TestCase):
                                 'subscription': '555'},
                         'COUNTRY': {'limit': 0},
                         'ENVIRONMENT': {'limit': 0},
-                        'accountinfo': {'addressPostal': {'postalCode': '11111'}},
+                        'accountInfo': {'addressPostal': {'postalCode': '11111'}},
                         'status': 'activationRequired',
                         'account': {'aps': {'id': 555}}})
         self.reprovisioned_tenant = \
@@ -79,7 +79,7 @@ class TestTenant(TestCase):
                                 'subscription': '555'},
                         'COUNTRY': {'limit': 0},
                         'ENVIRONMENT': {'limit': 0},
-                        'accountinfo': {'addressPostal': {'postalCode': '11111'}},
+                        'accountInfo': {'addressPostal': {'postalCode': '11111'}},
                         'status': 'reprovisioned',
                         'account': {'aps': {'id': 555}}})
         self.users_changed_notification = '{}'
@@ -510,7 +510,7 @@ class TestTenant(TestCase):
 
         tenant_body = {'status': 'reprovisioned', 'DISKSPACE': {'usage': 1},
                        'DEVICES': {'usage': 0},
-                       'accountinfo': {'addressPostal': {'postalCode': '11111'}},
+                       'accountInfo': {'addressPostal': {'postalCode': '11111'}},
                        'statusData': {'messages': [], 'perPropertyData': []},
                        'tenantId': 'fake_company_name'}
         OA_mock.send_request.assert_called_with('PUT', '/aps/2/application/tenant/123', tenant_body)
