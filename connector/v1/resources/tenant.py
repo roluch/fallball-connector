@@ -65,7 +65,7 @@ def get_tenant_args():
     parser.add_argument('account', dest='acc_id', type=parameter_validator('aps', 'id'),
                         required=True, help='Missing link to account in request')
 
-    parser.add_argument('accountinfo', dest='account_info', type=dict)
+    parser.add_argument('accountInfo', dest='account_info', type=dict)
     parser.add_argument('status', type=str)
     parser.add_argument('statusData', dest='status_data', type=dict)
 
@@ -99,7 +99,7 @@ def analyze_service_error(data):
                     ],
                     'perPropertyData': [
                         {
-                            'propertyName': 'accountinfo.addressPostal.postalCode',
+                            'propertyName': 'accountInfo.addressPostal.postalCode',
                             'pattern': r'(\d{5})',
                         },
                     ],
@@ -175,7 +175,7 @@ def provision_fallball_client(args):
         postal_code = company_info['addressPostal']['postalCode']
 
     info = {
-        'accountinfo': {
+        'accountInfo': {
             'addressPostal': {
                   'postalCode': postal_code,
             },
@@ -352,7 +352,7 @@ class TenantReprovision(ConnectorResource):
 
         if result.status_code == 201:
             body = {
-                'accountinfo': args.account_info,
+                'accountInfo': args.account_info,
                 'status': 'reprovisioned',
                 'statusData': {},
             }
