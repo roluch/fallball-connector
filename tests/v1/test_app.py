@@ -54,7 +54,8 @@ class TestApp(TestCase):
 
     @bypass_auth
     def test_app_upgrade(self):
-        res = self.client.post('/connector/v1/app/123/upgrade?version=100-500', headers=self.headers)
+        res = self.client.post('/connector/v1/app/123/upgrade?version=100-500',
+                               headers=self.headers)
         assert res.status_code == 200
 
     @bypass_auth

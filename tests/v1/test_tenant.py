@@ -120,7 +120,8 @@ class TestTenant(TestCase):
                                              'techContact': {'email': 'new-tenant@fallball.io'},
                                              'addressPostal': {'postalCode': '11111'}},
                                             {'subscriptionId': 555}]
-        res = self.client.post('/connector/v1/tenant', headers=self.headers, data=self.new_tenant_no_params)
+        res = self.client.post('/connector/v1/tenant', headers=self.headers,
+                               data=self.new_tenant_no_params)
         fb_client_mock.create.assert_called()
         make_admin_mock.assert_called()
         fb_admin_mock.update.assert_called()
@@ -135,7 +136,8 @@ class TestTenant(TestCase):
         fb_client_mock.reseller = Reseller('fake_reseller')
         OA_mock.get_resource.side_effect = [{'companyName': 'fake_company'},
                                             {'subscriptionId': 555}]
-        res = self.client.post('/connector/v1/tenant', headers=self.headers, data=self.reprovisioned_tenant)
+        res = self.client.post('/connector/v1/tenant', headers=self.headers,
+                               data=self.reprovisioned_tenant)
         fb_client_mock.create.assert_not_called()
         assert res.status_code == 201
 
@@ -150,7 +152,8 @@ class TestTenant(TestCase):
                                             {'subscriptionId': 555}]
         headers = self.headers.copy()
         headers.update({'Aps-Request-Phase': 'async'})
-        res = self.client.post('/connector/v1/tenant', headers=headers, data=self.reprovisioning_tenant)
+        res = self.client.post('/connector/v1/tenant', headers=headers,
+                               data=self.reprovisioning_tenant)
         fb_client_mock.create.assert_not_called()
         assert res.status_code == 202
 
@@ -166,7 +169,8 @@ class TestTenant(TestCase):
             {'companyName': 'fake_company', 'techContact': {'email': 'tenant-tech@fallball.io'},
              'addressPostal': {'postalCode': '11111'}},
             {'subscriptionId': 555}]
-        res = self.client.post('/connector/v1/tenant', headers=self.headers, data=self.new_tenant_no_email)
+        res = self.client.post('/connector/v1/tenant', headers=self.headers,
+                               data=self.new_tenant_no_email)
         fb_client_mock.create.assert_called()
         assert res.status_code == 201
 
@@ -277,7 +281,8 @@ class TestTenant(TestCase):
                                              'addressPostal': {'postalCode': '11111'},
                                              },
                                             {'subscriptionId': 555}]
-        res = self.client.post('/connector/v1/tenant', headers=self.headers, data=self.fb_client_with_users)
+        res = self.client.post('/connector/v1/tenant', headers=self.headers,
+                               data=self.fb_client_with_users)
         fb_client_mock.create.assert_called()
         assert res.status_code == 201
 
@@ -295,7 +300,8 @@ class TestTenant(TestCase):
                                              },
                                             {'subscriptionId': 555}]
         OA_mock.is_application_support_users.return_value = True
-        res = self.client.post('/connector/v1/tenant', headers=self.headers, data=self.diskless_tenant)
+        res = self.client.post('/connector/v1/tenant', headers=self.headers,
+                               data=self.diskless_tenant)
         fb_client_mock.create.assert_called()
         assert res.status_code == 201
 
