@@ -45,7 +45,7 @@ class TestUser(TestCase):
         client_instance.storage = {'limit': 100}
         OA_mock.get_resources.return_value = [self.new_tenant]
         OA_mock.get_resource.return_value = self.oa_user
-        res = self.client.post('/v1/user', headers=self.headers,
+        res = self.client.post('/connector/v1/user', headers=self.headers,
                                data=json.dumps(self.user_service))
         fb_user_mock.create.assert_called()
         assert res.status_code == 201
@@ -60,7 +60,7 @@ class TestUser(TestCase):
         make_fallball_user_mock['userId'] = '3c9ed599-cd79-4222-beb0-be83f9dc8078'
         OA_mock.get_resource.return_value = make_fallball_user_mock
         OA_mock.get_resources.side_effect = [[self.oa_user], [self.new_tenant]]
-        res = self.client.delete('/v1/user/123', headers=self.headers)
+        res = self.client.delete('/connector/v1/user/123', headers=self.headers)
         fb_user_mock.delete.assert_called()
         assert res.status_code == 204
 
@@ -80,7 +80,7 @@ class TestUser(TestCase):
             'usage': 1,
             'limit': 1
         }
-        res = self.client.put('/v1/user/123', headers=self.headers, data='{}')
+        res = self.client.put('/connector/v1/user/123', headers=self.headers, data='{}')
         assert res.status_code == 200
 
     @bypass_auth
@@ -102,7 +102,7 @@ class TestUser(TestCase):
             'limit': 1
         }
         OA_mock.get_resources.return_value = [self.oa_user]
-        res = self.client.put('/v1/user/123', headers=self.headers, data=user_payload)
+        res = self.client.put('/connector/v1/user/123', headers=self.headers, data=user_payload)
         OA_tenant_mock.send_request.assert_called()
         assert res.status_code == 200
 
@@ -112,7 +112,7 @@ class TestUser(TestCase):
         fb_user_mock = make_fallball_user_mock.return_value
         fb_user_mock.client.name = 'fake_client'
         fb_user_mock.login_link.return_value = 'login_link'
-        res = self.client.get('/v1/user/123/userlogin', headers=self.headers)
+        res = self.client.get('/connector/v1/user/123/userlogin', headers=self.headers)
         assert b'login_link' in res.data
 
     @patch('connector.v1.resources.user.OA')

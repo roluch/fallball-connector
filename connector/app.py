@@ -21,7 +21,7 @@ logger.addHandler(stream)
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app)
 
-app.register_blueprint(api_v1, url_prefix='/v1')
+app.register_blueprint(api_v1, url_prefix='/connector/v1')
 
 
 @app.route('/')
