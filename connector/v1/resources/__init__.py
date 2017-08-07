@@ -99,7 +99,6 @@ class OA(object):
     request_timeout = 50
 
     @staticmethod
-    @Memoize
     def get_notification_manager():
         rql_request = 'aps/2/resources?implementing({})'.format(
             urlquote('http://www.parallels.com/pa/pa-core-services/notification-manager/1'))
