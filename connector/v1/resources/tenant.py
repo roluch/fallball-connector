@@ -132,12 +132,32 @@ def analyze_service_error(data):
 
 def build_usage(client):
     client.refresh()
+
+    def key_by_value(obj, value):
+        return {val: key for key, val in obj.items()}[value]
+
+    try:
+        environment = key_by_value(config.environment, client.environment)
+    except ValueError:
+        environment = 0
+
+    try:
+        country = key_by_value(config.country, client.country)
+    except ValueError:
+        country = 0
+
     tenant = {
         config.diskspace_resource: {
             'usage': client.storage['usage']
         },
         config.devices_resource: {
             'usage': 0
+        },
+        'ENVIRONMENT': {
+            'usage': environment
+        },
+        'COUNTRY': {
+            'usage': country
         }
     }
     for user_type in OA.get_user_resources():
