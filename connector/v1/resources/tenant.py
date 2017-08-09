@@ -134,7 +134,7 @@ def build_usage(client):
     client.refresh()
 
     def key_by_value(obj, value):
-        return {val: key for key, val in obj.items()}[value]
+        return {val: key for key, val in obj.items()}.get(value)
 
     tenant = {
         config.diskspace_resource: {
