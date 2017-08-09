@@ -134,17 +134,7 @@ def build_usage(client):
     client.refresh()
 
     def key_by_value(obj, value):
-        return {val: key for key, val in obj.items()}[value]
-
-    try:
-        environment = key_by_value(config.environment, client.environment)
-    except ValueError:
-        environment = 0
-
-    try:
-        country = key_by_value(config.country, client.country)
-    except ValueError:
-        country = 0
+        return {val: key for key, val in obj.items()}.get(value)
 
     tenant = {
         config.diskspace_resource: {
@@ -152,14 +142,18 @@ def build_usage(client):
         },
         config.devices_resource: {
             'usage': 0
-        },
-        'ENVIRONMENT': {
-            'usage': environment
-        },
-        'COUNTRY': {
-            'usage': country
         }
     }
+
+    environment = key_by_value(config.environment, client.environment)
+    country = key_by_value(config.country, client.country)
+
+    if environment is not None:
+        tenant['ENVIRONMENT'] = {'usage': environment}
+
+    if country is not None:
+        tenant['COUNTRY'] = {'usage': country}
+
     for user_type in OA.get_user_resources():
         tenant[user_type] = {
             'usage': client.users_by_type.get(user_type, 0)
