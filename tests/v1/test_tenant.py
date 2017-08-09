@@ -1,4 +1,5 @@
 import json
+from contextlib import contextmanager
 
 from flask_testing import TestCase
 from mock import MagicMock, patch, DEFAULT
@@ -14,6 +15,26 @@ from tests.v1.utils import bypass_auth
 
 
 config = Config()
+
+
+@contextmanager
+def setup_fb_client():
+    patcher = patch('connector.v1.resources.tenant.Client')
+    FbClient_mock = patcher.start()
+    fb_client_mock = FbClient_mock.return_value
+    fb_client_mock.storage = {'usage': 1}
+    fb_client_mock.environment = 'TEST'
+    fb_client_mock.country = 'US'
+    fb_client_mock.name = 'fake_company_name'
+    fb_client_mock.users_by_type = {
+                'PLATINUM': 1,
+                'BRONZE': 2
+            }
+    fb_client_mock.reseller = Reseller('fake_reseller')
+
+    yield fb_client_mock
+
+    patcher.stop()
 
 
 class TestTenant(TestCase):
@@ -89,137 +110,126 @@ class TestTenant(TestCase):
     @bypass_auth
     @patch('connector.v1.resources.tenant.OA')
     @patch('connector.v1.resources.tenant.make_default_fallball_admin')
-    @patch('connector.v1.resources.tenant.Client')
-    def test_new_tenant(self, FbClient_mock, make_admin_mock, OA_mock):
-        fb_client_mock = FbClient_mock.return_value
-        fb_client_mock.storage = {'usage': 1}
-        fb_client_mock.name = 'fake_company_name'
-        fb_client_mock.reseller = Reseller('fake_reseller')
-        fb_admin_mock = make_admin_mock.return_value
-        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
-                                             'techContact': {'email': 'new-tenant@fallball.io'},
-                                             'addressPostal': {'postalCode': '11111'}},
-                                            {'subscriptionId': 555}]
-        res = self.client.post('/connector/v1/tenant', headers=self.headers, data=self.new_tenant)
-        fb_client_mock.create.assert_called()
-        make_admin_mock.assert_called()
-        fb_admin_mock.update.assert_called()
+    def test_new_tenant(self, make_admin_mock, OA_mock):
+        with setup_fb_client() as fb_client_mock:
+            fb_admin_mock = make_admin_mock.return_value
+            OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
+                                                 'techContact': {'email': 'new-tenant@fallball.io'},
+                                                 'addressPostal': {'postalCode': '11111'}},
+                                                {'subscriptionId': 555}]
+            res = self.client.post('/connector/v1/tenant',
+                                   headers=self.headers,
+                                   data=self.new_tenant)
+            fb_client_mock.create.assert_called()
+            make_admin_mock.assert_called()
+            fb_admin_mock.update.assert_called()
+
         assert res.status_code == 201
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.OA')
     @patch('connector.v1.resources.tenant.make_default_fallball_admin')
-    @patch('connector.v1.resources.tenant.Client')
-    def test_new_tenant_optional_params(self, FbClient_mock, make_admin_mock, OA_mock):
-        fb_client_mock = FbClient_mock.return_value
-        fb_client_mock.storage = {'usage': 1}
-        fb_client_mock.name = 'fake_company_name'
-        fb_client_mock.reseller = Reseller('fake_reseller')
-        fb_admin_mock = make_admin_mock.return_value
-        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
-                                             'techContact': {'email': 'new-tenant@fallball.io'},
-                                             'addressPostal': {'postalCode': '11111'}},
-                                            {'subscriptionId': 555}]
-        res = self.client.post('/connector/v1/tenant', headers=self.headers,
-                               data=self.new_tenant_no_params)
-        fb_client_mock.create.assert_called()
-        make_admin_mock.assert_called()
-        fb_admin_mock.update.assert_called()
+    def test_new_tenant_optional_params(self, make_admin_mock, OA_mock):
+        with setup_fb_client() as fb_client_mock:
+            fb_admin_mock = make_admin_mock.return_value
+            OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
+                                                 'techContact': {'email': 'new-tenant@fallball.io'},
+                                                 'addressPostal': {'postalCode': '11111'}},
+                                                {'subscriptionId': 555}]
+            res = self.client.post('/connector/v1/tenant', headers=self.headers,
+                                   data=self.new_tenant_no_params)
+            fb_client_mock.create.assert_called()
+            make_admin_mock.assert_called()
+            fb_admin_mock.update.assert_called()
+
         assert res.status_code == 201
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.OA')
-    @patch('connector.v1.resources.tenant.Client')
-    def test_create_reprovisioned_tenant(self, FbClient_mock, OA_mock):
-        fb_client_mock = FbClient_mock.return_value
-        fb_client_mock.name = 'fake_company_name'
-        fb_client_mock.reseller = Reseller('fake_reseller')
-        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company'},
-                                            {'subscriptionId': 555}]
-        res = self.client.post('/connector/v1/tenant', headers=self.headers,
-                               data=self.reprovisioned_tenant)
-        fb_client_mock.create.assert_not_called()
+    def test_create_reprovisioned_tenant(self, OA_mock):
+        with setup_fb_client() as fb_client_mock:
+            OA_mock.get_resource.side_effect = [{'companyName': 'fake_company'},
+                                                {'subscriptionId': 555}]
+            res = self.client.post('/connector/v1/tenant', headers=self.headers,
+                                   data=self.reprovisioned_tenant)
+            fb_client_mock.create.assert_not_called()
+
         assert res.status_code == 201
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.OA')
-    @patch('connector.v1.resources.tenant.Client')
-    def test_create_client_reprovision_not_completed(self, FbClient_mock, OA_mock):
-        fb_client_mock = FbClient_mock.return_value
-        fb_client_mock.name = 'fake_company_name'
-        fb_client_mock.reseller = Reseller('fake_reseller')
-        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company'},
-                                            {'subscriptionId': 555}]
-        headers = self.headers.copy()
-        headers.update({'Aps-Request-Phase': 'async'})
-        res = self.client.post('/connector/v1/tenant', headers=headers,
-                               data=self.reprovisioning_tenant)
-        fb_client_mock.create.assert_not_called()
+    def test_create_client_reprovision_not_completed(self, OA_mock):
+        with setup_fb_client() as fb_client_mock:
+            OA_mock.get_resource.side_effect = [{'companyName': 'fake_company'},
+                                                {'subscriptionId': 555}]
+            headers = self.headers.copy()
+            headers.update({'Aps-Request-Phase': 'async'})
+            res = self.client.post('/connector/v1/tenant', headers=headers,
+                                   data=self.reprovisioning_tenant)
+            fb_client_mock.create.assert_not_called()
+
         assert res.status_code == 202
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.OA')
-    @patch('connector.v1.resources.tenant.Client')
-    def test_new_tenant_no_email(self, FbClient_mock, OA_mock):
-        fb_client_mock = FbClient_mock.return_value
-        fb_client_mock.storage = {'usage': 1}
-        fb_client_mock.name = 'fake_company_name'
-        fb_client_mock.reseller = Reseller('fake_reseller')
-        OA_mock.get_resource.side_effect = [
-            {'companyName': 'fake_company', 'techContact': {'email': 'tenant-tech@fallball.io'},
-             'addressPostal': {'postalCode': '11111'}},
-            {'subscriptionId': 555}]
-        res = self.client.post('/connector/v1/tenant', headers=self.headers,
-                               data=self.new_tenant_no_email)
-        fb_client_mock.create.assert_called()
+    def test_new_tenant_no_email(self, OA_mock):
+        with setup_fb_client() as fb_client_mock:
+            OA_mock.get_resource.side_effect = [
+                {'companyName': 'fake_company', 'techContact': {'email': 'tenant-tech@fallball.io'},
+                 'addressPostal': {'postalCode': '11111'}},
+                {'subscriptionId': 555}]
+            res = self.client.post('/connector/v1/tenant', headers=self.headers,
+                                   data=self.new_tenant_no_email)
+            fb_client_mock.create.assert_called()
+
         assert res.status_code == 201
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.OA')
-    @patch('connector.v1.resources.tenant.Client')
-    def test_new_tenant_recoverable_error(self, FbClient_mock, OA_mock):
-        fb_client_mock = FbClient_mock.return_value
-        fb_client_mock.name = 'fake_company_name'
-        fb_client_mock.reseller = Reseller('fake_reseller')
-        response = MagicMock()
+    def test_new_tenant_recoverable_error(self, OA_mock):
+        with setup_fb_client() as fb_client_mock:
+            response = MagicMock()
 
-        response.json.return_value = {'postal_code': {
-            'code': 'E1002',
-            'message': "Postal code can't start with 999"}
-        }
+            response.json.return_value = {'postal_code': {
+                'code': 'E1002',
+                'message': "Postal code can't start with 999"}
+            }
 
-        fb_client_mock.create.side_effect = HttpClientError(response=response)
-        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
-                                             'techContact': {'email': 'new-tenant@fallball.io'}},
-                                            {'subscriptionId': 555}]
+            fb_client_mock.create.side_effect = HttpClientError(response=response)
+            OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
+                                                 'techContact':
+                                                     {'email': 'new-tenant@fallball.io'}},
+                                                {'subscriptionId': 555}]
 
-        res = self.client.post('/connector/v1/tenant', headers=self.headers, data=self.new_tenant)
-        fb_client_mock.create.assert_called()
+            res = self.client.post('/connector/v1/tenant',
+                                   headers=self.headers,
+                                   data=self.new_tenant)
+            fb_client_mock.create.assert_called()
 
         assert res.json['status'] == 'activationRequired'
         assert res.status_code == 202
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.OA')
-    @patch('connector.v1.resources.tenant.Client')
-    def test_new_tenant_recoverable_error_invalid_zip(self, FbClient_mock, OA_mock):
-        fb_client_mock = FbClient_mock.return_value
-        fb_client_mock.name = 'fake_company_name'
-        fb_client_mock.reseller = Reseller('fake_reseller')
-        response = MagicMock()
+    def test_new_tenant_recoverable_error_invalid_zip(self, OA_mock):
+        with setup_fb_client() as fb_client_mock:
+            response = MagicMock()
 
-        response.json.return_value = {'postal_code': {
-            'code': 'E1001',
-            'message': "Postal code must be a 5-digit number"}
-        }
+            response.json.return_value = {'postal_code': {
+                'code': 'E1001',
+                'message': "Postal code must be a 5-digit number"}
+            }
 
-        fb_client_mock.create.side_effect = HttpClientError(response=response)
-        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
-                                             'techContact': {'email': 'new-tenant@fallball.io'}},
-                                            {'subscriptionId': 555}]
+            fb_client_mock.create.side_effect = HttpClientError(response=response)
+            OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
+                                                 'techContact':
+                                                     {'email': 'new-tenant@fallball.io'}},
+                                                {'subscriptionId': 555}]
 
-        res = self.client.post('/connector/v1/tenant', headers=self.headers, data=self.new_tenant)
-        fb_client_mock.create.assert_called()
+            res = self.client.post('/connector/v1/tenant',
+                                   headers=self.headers,
+                                   data=self.new_tenant)
+            fb_client_mock.create.assert_called()
 
         assert res.json['status'] == 'activationRequired'
         assert res.status_code == 202
@@ -228,140 +238,126 @@ class TestTenant(TestCase):
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.OA')
-    @patch('connector.v1.resources.tenant.Client')
-    def test_new_tenant_unrecoverable_error(self, FbClient_mock, OA_mock):
-        fb_client_mock = FbClient_mock.return_value
-        fb_client_mock.name = 'fake_company_name'
-        fb_client_mock.reseller = Reseller('fake_reseller')
-        response = MagicMock()
-        response.json.return_value = {'unknown_error': 'Something went wrong'}
-        response.text = 'Something went wrong'
-        response.status_code = 400
-        fb_client_mock.create.side_effect = HttpClientError(response=response)
-        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
-                                             'techContact': {'email': 'new-tenant@fallball.io'},
-                                             'addressPostal': {'postalCode': '11111'}},
-                                            {'subscriptionId': 555}]
-        res = self.client.post('/connector/v1/tenant', headers=self.headers, data=self.new_tenant)
-        fb_client_mock.create.assert_called()
+    def test_new_tenant_unrecoverable_error(self, OA_mock):
+        with setup_fb_client() as fb_client_mock:
+            response = MagicMock()
+            response.json.return_value = {'unknown_error': 'Something went wrong'}
+            response.text = 'Something went wrong'
+            response.status_code = 400
+            fb_client_mock.create.side_effect = HttpClientError(response=response)
+            OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
+                                                 'techContact': {'email': 'new-tenant@fallball.io'},
+                                                 'addressPostal': {'postalCode': '11111'}},
+                                                {'subscriptionId': 555}]
+            res = self.client.post('/connector/v1/tenant',
+                                   headers=self.headers,
+                                   data=self.new_tenant)
+            fb_client_mock.create.assert_called()
 
         assert res.status_code == 500
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.OA')
-    @patch('connector.v1.resources.tenant.Client')
-    def test_new_tenant_unexpected_error(self, FbClient_mock, OA_mock):
-        fb_client_mock = FbClient_mock.return_value
-        fb_client_mock.name = 'fake_company_name'
-        fb_client_mock.reseller = Reseller('fake_reseller')
-        response = MagicMock()
-        response.json.return_value = {'unknown_error': 'Something went wrong'}
-        response.text = 'Something went wrong'
-        response.status_code = 500
-        fb_client_mock.create.side_effect = HttpServerError(response=response)
-        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
-                                             'techContact': {'email': 'new-tenant@fallball.io'},
-                                             'addressPostal': {'postalCode': '11111'}},
-                                            {'subscriptionId': 555}]
-        res = self.client.post('/connector/v1/tenant', headers=self.headers, data=self.new_tenant)
-        fb_client_mock.create.assert_called()
+    def test_new_tenant_unexpected_error(self, OA_mock):
+        with setup_fb_client() as fb_client_mock:
+            response = MagicMock()
+            response.json.return_value = {'unknown_error': 'Something went wrong'}
+            response.text = 'Something went wrong'
+            response.status_code = 500
+            fb_client_mock.create.side_effect = HttpServerError(response=response)
+            OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
+                                                 'techContact': {'email': 'new-tenant@fallball.io'},
+                                                 'addressPostal': {'postalCode': '11111'}},
+                                                {'subscriptionId': 555}]
+            res = self.client.post('/connector/v1/tenant',
+                                   headers=self.headers,
+                                   data=self.new_tenant)
+            fb_client_mock.create.assert_called()
 
         assert res.status_code == 500
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.OA')
-    @patch('connector.v1.resources.tenant.Client')
-    def test_new_fb_client_users(self, FbClient_mock, OA_mock):
-        fb_client_mock = FbClient_mock.return_value
-        fb_client_mock.storage = {'usage': 1}
-        fb_client_mock.name = 'fake_company_name'
-        fb_client_mock.reseller = Reseller('fake_reseller')
-        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
-                                             'techContact': {'email': 'new-tenant@fallball.io'},
-                                             'addressPostal': {'postalCode': '11111'},
-                                             },
-                                            {'subscriptionId': 555}]
-        res = self.client.post('/connector/v1/tenant', headers=self.headers,
-                               data=self.fb_client_with_users)
-        fb_client_mock.create.assert_called()
+    def test_new_fb_client_users(self, OA_mock):
+        with setup_fb_client() as fb_client_mock:
+            OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
+                                                 'techContact': {'email': 'new-tenant@fallball.io'},
+                                                 'addressPostal': {'postalCode': '11111'},
+                                                 },
+                                                {'subscriptionId': 555}]
+            res = self.client.post('/connector/v1/tenant', headers=self.headers,
+                                   data=self.fb_client_with_users)
+            fb_client_mock.create.assert_called()
+
         assert res.status_code == 201
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.OA')
-    @patch('connector.v1.resources.tenant.Client')
-    def test_new_fb_client_no_diskspace(self, FbClient_mock, OA_mock):
-        fb_client_mock = FbClient_mock.return_value
-        fb_client_mock.storage = {'usage': 1}
-        fb_client_mock.name = 'fake_company_name'
-        fb_client_mock.reseller = Reseller('fake_reseller')
-        OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
-                                             'techContact': {'email': 'new-tenant@fallball.io'},
-                                             'addressPostal': {'postalCode': '11111'}
-                                             },
-                                            {'subscriptionId': 555}]
-        OA_mock.is_application_support_users.return_value = True
-        res = self.client.post('/connector/v1/tenant', headers=self.headers,
-                               data=self.diskless_tenant)
-        fb_client_mock.create.assert_called()
+    def test_new_fb_client_no_diskspace(self, OA_mock):
+        with setup_fb_client() as fb_client_mock:
+            OA_mock.get_resource.side_effect = [{'companyName': 'fake_company',
+                                                 'techContact': {'email': 'new-tenant@fallball.io'},
+                                                 'addressPostal': {'postalCode': '11111'}
+                                                 },
+                                                {'subscriptionId': 555}]
+            OA_mock.is_application_support_users.return_value = True
+            res = self.client.post('/connector/v1/tenant', headers=self.headers,
+                                   data=self.diskless_tenant)
+            fb_client_mock.create.assert_called()
+
         assert res.status_code == 201
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.OA')
     @patch('connector.v1.resources.tenant.get_name_for_tenant')
-    @patch('connector.v1.resources.tenant.Client')
-    def test_resource_usage(self, FbClient_mock, get_name_for_fb_client_mock, OA_mock):
-        fb_client_mock = FbClient_mock.return_value
-        get_name_for_fb_client_mock.return_value = 'fake_client'
-        fb_client_mock.users_by_type = {
-            'PLATINUM': 1,
-            'BRONZE': 2
-        }
-        fb_client_mock.storage = {'usage': 1}
-        OA_mock.get_user_resources.return_value = ['PLATINUM', 'BRONZE']
+    def test_resource_usage(self, get_name_for_fb_client_mock, OA_mock):
+        with setup_fb_client() as fb_client_mock:
+            get_name_for_fb_client_mock.return_value = 'fake_client'
+            OA_mock.get_user_resources.return_value = ['PLATINUM', 'BRONZE']
 
-        res = self.client.get('/connector/v1/tenant/123', headers=self.headers)
-        data = res.json
-        assert data[config.diskspace_resource]['usage'] == 1
-        assert data['PLATINUM']['usage'] == 1
-        assert data['BRONZE']['usage'] == 2
-        assert res.status_code == 200
+            res = self.client.get('/connector/v1/tenant/123', headers=self.headers)
+            data = res.json
+            assert data[config.diskspace_resource]['usage'] == 1
+            assert data['PLATINUM']['usage'] == 1
+            assert data['BRONZE']['usage'] == 2
+            assert res.status_code == 200
 
-        fb_client_mock.users_by_type['BRONZE'] = 4
-        res = self.client.get('/connector/v1/tenant/123', headers=self.headers)
-        data = res.json
+            fb_client_mock.users_by_type['BRONZE'] = 4
+            res = self.client.get('/connector/v1/tenant/123', headers=self.headers)
+            data = res.json
+
         assert data['BRONZE']['usage'] == 4
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.get_name_for_tenant')
-    @patch('connector.v1.resources.tenant.Client')
-    def test_update_tenant(self, FbClient_mock, get_name_for_fb_client_mock):
-        fb_client_mock = FbClient_mock.return_value
-        get_name_for_fb_client_mock.return_value = 'fake_client'
-        res = self.client.put('/connector/v1/tenant/123', headers=self.headers,
-                              data=self.new_tenant)
-        fb_client_mock.update.assert_called()
+    def test_update_tenant(self, get_name_for_fb_client_mock):
+        with setup_fb_client() as fb_client_mock:
+            get_name_for_fb_client_mock.return_value = 'fake_client'
+            res = self.client.put('/connector/v1/tenant/123', headers=self.headers,
+                                  data=self.new_tenant)
+            fb_client_mock.update.assert_called()
+
         assert res.status_code == 200
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.get_name_for_tenant')
-    @patch('connector.v1.resources.tenant.Client')
-    def test_update_fb_client_no_diskspace(self, FbClient_mock, get_name_for_fb_client_mock):
-        fb_client_mock = FbClient_mock.return_value
-        get_name_for_fb_client_mock.return_value = 'fake_client'
-        res = self.client.put('/connector/v1/tenant/123', headers=self.headers,
-                              data=self.diskless_tenant)
-        fb_client_mock.update.assert_not_called()
+    def test_update_fb_client_no_diskspace(self, get_name_for_fb_client_mock):
+        with setup_fb_client() as fb_client_mock:
+            get_name_for_fb_client_mock.return_value = 'fake_client'
+            res = self.client.put('/connector/v1/tenant/123', headers=self.headers,
+                                  data=self.diskless_tenant)
+            fb_client_mock.update.assert_not_called()
+
         assert res.status_code == 200
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.get_name_for_tenant')
-    @patch('connector.v1.resources.tenant.Client')
-    def test_delete_tenant(self, FbClient_mock, get_name_for_fb_client_mock):
-        fb_client_mock = FbClient_mock.return_value
+    def test_delete_tenant(self, get_name_for_fb_client_mock):
+        with setup_fb_client() as fb_client_mock:
+            get_name_for_fb_client_mock.return_value = 'fake_client'
+            res = self.client.delete('/connector/v1/tenant/123', headers=self.headers)
+            fb_client_mock.delete.assert_called()
 
-        get_name_for_fb_client_mock.return_value = 'fake_client'
-        res = self.client.delete('/connector/v1/tenant/123', headers=self.headers)
-        fb_client_mock.delete.assert_called()
         assert res.status_code == 204
 
     @bypass_auth
@@ -449,77 +445,81 @@ class TestTenant(TestCase):
     @patch('connector.v1.resources.tenant.OA')
     @patch('connector.v1.resources.tenant.g')
     @patch('connector.v1.resources.tenant.get_name_for_tenant')
-    @patch('connector.v1.resources.tenant.Client')
-    def test_fb_client_on_users_change(self, FbClient_mock,
+    def test_fb_client_on_users_change(self,
                                        get_name_for_fb_client_mock, flask_g_mock,
                                        OA_mock, FbUser_mock):
-        fb_client_mock = FbClient_mock.return_value
-        get_name_for_fb_client_mock.return_value = 'fake_client'
-        flask_g_mock.reseller = Reseller('fake_reseller')
-        fb_client_mock.users_by_type = {
-            'BRILLIANT_USERS': 1
-        }
-        fb_client_mock.storage = {'usage': 1}
-        tenant = {
-            config.devices_resource: {
-                'usage': 0
-            },
-            'BRILLIANT_USERS': {
-                'usage': 1
-            },
-            config.diskspace_resource: {
-                'usage': 1
+        with setup_fb_client() as fb_client_mock:
+            get_name_for_fb_client_mock.return_value = 'fake_client'
+            flask_g_mock.reseller = Reseller('fake_reseller')
+            fb_client_mock.users_by_type = {
+                'BRILLIANT_USERS': 1
             }
-        }
-        OA_mock.get_user_resources.return_value = ['BRILLIANT_USERS']
-        self.client.post('/connector/v1/tenant/123/onUsersChange',
-                         headers=self.headers, data='{}')
-        OA_mock.send_request.assert_called_with('put',
-                                                'aps/2/application/tenant/123',
-                                                tenant)
+            tenant = {
+                config.devices_resource: {
+                    'usage': 0
+                },
+                'BRILLIANT_USERS': {
+                    'usage': 1
+                },
+                config.diskspace_resource: {
+                    'usage': 1
+                },
+                'ENVIRONMENT': {
+                    'usage': 1
+                },
+                'COUNTRY': {
+                    'usage': 0
+                }
+            }
+            OA_mock.get_user_resources.return_value = ['BRILLIANT_USERS']
+            self.client.post('/connector/v1/tenant/123/onUsersChange',
+                             headers=self.headers, data='{}')
+            OA_mock.send_request.assert_called_with('put',
+                                                    'aps/2/application/tenant/123',
+                                                    tenant)
 
-        fb_client_mock.users_by_type['SILVER_USERS'] = 2
-        OA_mock.get_user_resources.return_value = ['BRILLIANT_USERS', 'SILVER_USERS']
+            fb_client_mock.users_by_type['SILVER_USERS'] = 2
+            OA_mock.get_user_resources.return_value = ['BRILLIANT_USERS', 'SILVER_USERS']
 
-        tenant['SILVER_USERS'] = {
-          'usage': 2
-        }
+            tenant['SILVER_USERS'] = {
+              'usage': 2
+            }
 
-        self.client.post('/connector/v1/tenant/123/onUsersChange',
-                         headers=self.headers, data='{}')
-        OA_mock.send_request.assert_called_with('put',
-                                                'aps/2/application/tenant/123',
-                                                tenant)
+            self.client.post('/connector/v1/tenant/123/onUsersChange',
+                             headers=self.headers, data='{}')
+            OA_mock.send_request.assert_called_with('put',
+                                                    'aps/2/application/tenant/123',
+                                                    tenant)
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.FbUser')
     @patch('connector.v1.resources.tenant.OA')
     @patch('connector.v1.resources.tenant.g')
     @patch('connector.v1.resources.tenant.get_name_for_tenant')
-    @patch('connector.v1.resources.tenant.Client')
-    def test_tenant_reprovision(self, FbClient_mock,
+    def test_tenant_reprovision(self,
                                 get_name_for_fb_client_mock, flask_g_mock,
                                 OA_mock, FbUser_mock):
-        fb_client_mock = FbClient_mock.return_value
-        fb_client_mock.name = 'fake_company_name'
-        fb_client_mock.reseller = Reseller('fake_reseller')
-        fb_client_mock.storage = {'usage': 1}
+        with setup_fb_client():
+            OA_mock.get_resource.side_effect = [json.loads(self.reprovisioning_tenant),
+                                                {'companyName': 'fake_company',
+                                                 'techContact': {'email': 'new-tenant@fallball.io'},
+                                                 'addressPostal': {'postalCode': '11111'}},
+                                                {'subscriptionId': 555}]
 
-        OA_mock.get_resource.side_effect = [json.loads(self.reprovisioning_tenant),
-                                            {'companyName': 'fake_company',
-                                             'techContact': {'email': 'new-tenant@fallball.io'},
-                                             'addressPostal': {'postalCode': '11111'}},
-                                            {'subscriptionId': 555}]
+            resp = self.client.post('/connector/v1/tenant/123/reprovision', headers=self.headers,
+                                    data=self.reprovisioning_tenant)
 
-        resp = self.client.post('/connector/v1/tenant/123/reprovision', headers=self.headers,
-                                data=self.reprovisioning_tenant)
+            tenant_body = {'status': 'reprovisioned', 'DISKSPACE': {'usage': 1},
+                           'DEVICES': {'usage': 0},
+                           'COUNTRY': {'usage': 0},
+                           'ENVIRONMENT': {'usage': 1},
+                           'accountInfo': {'addressPostal': {'postalCode': '11111'}},
+                           'statusData': {'messages': [], 'perPropertyData': []},
+                           'tenantId': 'fake_company_name'}
+            OA_mock.send_request.assert_called_with('PUT',
+                                                    '/aps/2/application/tenant/123',
+                                                    tenant_body)
 
-        tenant_body = {'status': 'reprovisioned', 'DISKSPACE': {'usage': 1},
-                       'DEVICES': {'usage': 0},
-                       'accountInfo': {'addressPostal': {'postalCode': '11111'}},
-                       'statusData': {'messages': [], 'perPropertyData': []},
-                       'tenantId': 'fake_company_name'}
-        OA_mock.send_request.assert_called_with('PUT', '/aps/2/application/tenant/123', tenant_body)
         self.assertEqual(resp.status_code, 200)
 
     @bypass_auth
@@ -528,13 +528,9 @@ class TestTenant(TestCase):
     @patch('connector.v1.resources.tenant.OA')
     @patch('connector.v1.resources.tenant.g')
     @patch('connector.v1.resources.tenant.get_name_for_tenant')
-    @patch('connector.v1.resources.tenant.Client')
-    def test_tenant_reprovision_unsuccessful(self, FbClient_mock,
+    def test_tenant_reprovision_unsuccessful(self,
                                              get_name_for_fb_client_mock, flask_g_mock,
                                              OA_mock, FbUser_mock, provision_fb_client_mock):
-        fb_client_mock = FbClient_mock.return_value
-        fb_client_mock.name = 'fake_company_name'
-        fb_client_mock.reseller = Reseller('fake_reseller')
         provision_result_mock = provision_fb_client_mock.return_value
         provision_result_mock.status_code = 202
         provision_result_mock.body = {'statusData': {}}
@@ -548,6 +544,7 @@ class TestTenant(TestCase):
         OA_mock.send_request.assert_called_with('PUT',
                                                 '/aps/2/application/tenant/123',
                                                 {'statusData': {}})
+
         self.assertEqual(resp.status_code, 200)
 
     @bypass_auth
@@ -556,13 +553,9 @@ class TestTenant(TestCase):
     @patch('connector.v1.resources.tenant.OA')
     @patch('connector.v1.resources.tenant.g')
     @patch('connector.v1.resources.tenant.get_name_for_tenant')
-    @patch('connector.v1.resources.tenant.Client')
-    def test_tenant_reprovision_reprovisioned(self, FbClient_mock,
+    def test_tenant_reprovision_reprovisioned(self,
                                               get_name_for_fb_client_mock, flask_g_mock,
                                               OA_mock, FbUser_mock, provision_fb_client_mock):
-        fb_client_mock = FbClient_mock.return_value
-        fb_client_mock.name = 'fake_company_name'
-        fb_client_mock.reseller = Reseller('fake_reseller')
         provision_result_mock = provision_fb_client_mock.return_value
         provision_result_mock.status_code = 202
         provision_result_mock.body = {'statusData': {}}

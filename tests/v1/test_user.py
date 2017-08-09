@@ -71,6 +71,8 @@ class TestUser(TestCase):
     def test_update_user(self, make_fallball_user_mock, OA_user_mock, OA_tenant_mock):
         fb_user_mock = make_fallball_user_mock.return_value
         fb_user_mock.client.name = 'fake_client'
+        fb_user_mock.client.environment = 'TEST'
+        fb_user_mock.client.country = 'US'
         OA_user_mock.get_resources.return_value = [self.oa_user]
         fb_user_mock.client.users_by_type = {
             'BRONZE_USERS': 1,
@@ -90,6 +92,8 @@ class TestUser(TestCase):
     def test_update_user_with_profiles(self, make_fallball_user_mock, OA_mock, OA_tenant_mock):
         fb_user_mock = make_fallball_user_mock.return_value
         fb_user_mock.client.name = 'fake_client'
+        fb_user_mock.client.environment = 'TEST'
+        fb_user_mock.client.country = 'US'
         user_payload = json.dumps({
             'resource': 'SILVER_USERS'
         })
