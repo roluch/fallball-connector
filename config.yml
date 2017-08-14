@@ -12,5 +12,15 @@ parameters:
     1: TEST
   COUNTRY:
     0: US
-    1: MX
-    2: CA
+    1: CA
+    2: UK
+    3: NL
+    4: IT
+    5: BE
+    6: SE
+    7: DE
+    8: FR
+    9: ES
+    10: CH
+    11: AT
+    12: AU
