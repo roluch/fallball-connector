@@ -23,6 +23,9 @@ app.wsgi_app = ProxyFix(app.wsgi_app)
 
 app.register_blueprint(api_v1, url_prefix='/connector/v1')
 
+api_v1.name = 'latest'
+app.register_blueprint(api_v1, url_prefix='/connector')
+
 
 @app.route('/')
 def home():
