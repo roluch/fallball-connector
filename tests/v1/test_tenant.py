@@ -314,6 +314,7 @@ class TestTenant(TestCase):
         with setup_fb_client() as fb_client_mock:
             get_name_for_fb_client_mock.return_value = 'fake_client'
             OA_mock.get_user_resources.return_value = ['PLATINUM', 'BRONZE']
+            OA_mock.get_counters.return_value = ['DEVICES', 'DISKSPACE', 'USERS']
 
             res = self.client.get('/connector/v1/tenant/123', headers=self.headers)
             data = res.json
@@ -327,6 +328,19 @@ class TestTenant(TestCase):
             data = res.json
 
         assert data['BRONZE']['usage'] == 4
+
+    @bypass_auth
+    @patch('connector.v1.resources.tenant.OA')
+    @patch('connector.v1.resources.tenant.get_name_for_tenant')
+    def test_resource_usage_only_schema_counters(self, get_name_for_fb_client_mock, OA_mock):
+        with setup_fb_client():
+            get_name_for_fb_client_mock.return_value = 'fake_client'
+            OA_mock.get_counters.return_value = ['DEVICES', 'USERS']
+
+            res = self.client.get('/connector/v1/tenant/123', headers=self.headers)
+            data = res.json
+            assert res.status_code == 200
+            assert config.diskspace_resource not in data
 
     @bypass_auth
     @patch('connector.v1.resources.tenant.get_name_for_tenant')
@@ -472,6 +486,7 @@ class TestTenant(TestCase):
                 }
             }
             OA_mock.get_user_resources.return_value = ['BRILLIANT_USERS']
+            OA_mock.get_counters.return_value = ['DEVICES', 'DISKSPACE', 'USERS']
             self.client.post('/connector/v1/tenant/123/onUsersChange',
                              headers=self.headers, data='{}')
             OA_mock.send_request.assert_called_with('put',
@@ -505,6 +520,8 @@ class TestTenant(TestCase):
                                                  'techContact': {'email': 'new-tenant@fallball.io'},
                                                  'addressPostal': {'postalCode': '11111'}},
                                                 {'subscriptionId': 555}]
+
+            OA_mock.get_counters.return_value = ['DEVICES', 'DISKSPACE', 'USERS']
 
             resp = self.client.post('/connector/v1/tenant/123/reprovision', headers=self.headers,
                                     data=self.reprovisioning_tenant)
