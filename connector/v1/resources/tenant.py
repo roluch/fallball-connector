@@ -136,14 +136,13 @@ def build_usage(client):
     def key_by_value(obj, value):
         return {val: key for key, val in obj.items()}.get(value)
 
-    tenant = {
-        config.diskspace_resource: {
-            'usage': client.storage['usage']
-        },
-        config.devices_resource: {
-            'usage': 0
-        }
-    }
+    tenant = {}
+    counters = OA.get_counters()
+
+    if config.diskspace_resource in counters:
+        tenant[config.diskspace_resource] = {'usage': client.storage['usage']}
+    if config.devices_resource in counters:
+        tenant[config.devices_resource] = {'usage': 0}
 
     environment = key_by_value(config.environment, client.environment)
     country = key_by_value(config.country, client.country)

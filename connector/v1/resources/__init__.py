@@ -231,5 +231,20 @@ class OA(object):
         return user_schema
 
     @staticmethod
+    @Memoize_timeout
+    def get_tenant_schema():
+        tenant_schema = {}
+        tenant_schema_uri = OA.get_application_schema().get('tenant', {}).get('schema')
+        if tenant_schema_uri:
+            tenant_schema = OA.send_request('get', tenant_schema_uri, transaction=False)
+        return tenant_schema
+
+    @staticmethod
     def get_user_resources():
         return OA.get_user_schema().get('properties', {}).get('resource', {}).get('enum', [])
+
+    @staticmethod
+    def get_counters():
+        props = OA.get_tenant_schema().get('properties', {})
+        counters = [name for name, value in props.items() if 'Counter' in value.get('type', '')]
+        return counters
