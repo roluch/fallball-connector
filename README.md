@@ -37,7 +37,7 @@ $ python connector/app.py
 ngrok http 5000
 ```
 
-* Use public connector URL <https://YOUR_UNIQ_ID.ngrok.io/v1/>
+* Use public connector URL <https://YOUR_UNIQ_ID.ngrok.io/connector/>
 
 If you run the connector without SSL behind SSL-enabled reverse proxy, make sure that proxy populates the `X-Forwarded-Proto` header.
 
