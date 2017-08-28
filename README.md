@@ -56,3 +56,79 @@ Application is started in debug mode in docker container on port 5000.
 ```bash
 python setup.py nosetests
 ```
+
+### Logging
+
+The standard logger outputs in JSON format. You can use it like this:
+
+```python
+from connector.utils import logger
+logger.info("I am a log entry")
+```
+
+It will place into the standard output something similar to this:
+
+```json
+{
+    "message": "I am a log entry",
+    "time": "2017-01-01 10:00:00.270976",
+    "level": "INFO",
+    "reseller_id": "None"
+}
+```
+
+
+#### Using your own logger
+
+If you would like to use your own logger instead, you are welcome to do so.
+All python logging utilities are fully supported.
+
+For example:
+
+```python
+import sys
+import logging
+
+# Optional configuration.
+# Here we explicitly instruct logger to always write to stdout,
+# even for log levels below ERROR, and configure a logging format.
+stream = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+stream.setFormatter(formatter)
+
+my_logger = logging.getLogger(__name__)
+my_logger.setLevel(logging.DEBUG)
+my_logger.addHandler(stream)
+
+```
+
+If you use this logger inside HealthCheck handler:
+
+```python
+class HealthCheck(ConnectorResource):
+    def get(self):
+        my_logger.info("I am a log entry")
+        return {'status': 'ok',
+                'version': version}
+```
+
+, you will get an output similar to the one below:
+
+```
+2017-08-28 15:05:57,829 - connector.v1.resources.application - INFO - I am a log entry
+```
+
+
+#### Disabling the built-in logger
+
+By default connector outputs detailed information about incoming and outgoing requests in JSON format.
+It can be distracting during local development.
+To turn these logs off, find the following entry in the `connector/utils.py` file:
+
+```python
+logger.setLevel(logging.DEBUG)
+```
+, and change it from `logging.DEBUG` to `logging.CRITICAL`.
+
+This will disable the built-in request and response logs.
+Your custom logger will continue to work.
