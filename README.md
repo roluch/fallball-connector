@@ -57,9 +57,9 @@ Application is started in debug mode in docker container on port 5000.
 python setup.py nosetests
 ```
 
-## Logging
+### Logging
 
-Our standard logger outputs in JSON format. You can use it like this:
+The standard logger outputs in JSON format. You can use it like this:
 
 ```python
 from connector.utils import logger
@@ -121,7 +121,7 @@ class HealthCheck(ConnectorResource):
 
 #### Disabling the built-in logger
 
-By default connector logs detailed information about incoming and outgoing requests in JSON format.
+By default connector outputs detailed information about incoming and outgoing requests in JSON format.
 It can be distracting during local development.
 To turn these logs off, find the following entry in the `connector/utils.py` file:
 
