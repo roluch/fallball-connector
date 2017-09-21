@@ -41,7 +41,9 @@ class UserList(ConnectorResource):
         limit = 0 if client.storage['limit'] == 0 else generate_limit(args.user_type)
 
         oa_user = OA.get_resource(args.user_id)
-        user = FbUser(client, email=oa_user['email'], admin=oa_user['isAccountAdmin'],
+        user_email = oa_user.get('email', oa_user['login'])
+
+        user = FbUser(client, email=user_email, admin=oa_user['isAccountAdmin'],
                       storage={'limit': limit},
                       profile_type=args.user_type)
 

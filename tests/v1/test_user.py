@@ -17,8 +17,10 @@ class TestUser(TestCase):
         app.config.update({'TESTING': True})
         self.client = app.test_client()
         self.new_tenant = {'aps': {'type': 'http://new.app', 'id': '123-123-123'}}
-        self.oa_user = {'email': 'user@odin.com', 'isAccountAdmin': True,
-                        'displayName': 'User Name', 'aps': {'id': '123'}}
+        self.oa_user = {'email': 'user_email@odin.com', 'login': 'user_login@odin.com',
+                        'isAccountAdmin': True, 'displayName': 'User Name', 'aps': {'id': '123'}}
+        self.oa_user_no_email = {'login': 'user_login@odin.com', 'isAccountAdmin': True,
+                                 'displayName': 'User Name', 'aps': {'id': '123'}}
         self.user_service = {'aps': {'type': 'http://new.app/user-service/1.0'},
                              'tenant': {'aps': {'id': '123'}},
                              'userId': '3c9ed599-cd79-4222-beb0-be83f9dc8078',
@@ -47,6 +49,35 @@ class TestUser(TestCase):
         OA_mock.get_resource.return_value = self.oa_user
         res = self.client.post('/connector/v1/user', headers=self.headers,
                                data=json.dumps(self.user_service))
+
+        FbUser_mock.assert_called()
+        fbuser_kwargs = FbUser_mock.call_args[1]
+        assert fbuser_kwargs.get('email') == self.oa_user['email']
+
+        fb_user_mock.create.assert_called()
+        assert res.status_code == 201
+
+    @bypass_auth
+    @patch('connector.v1.resources.user.OA')
+    @patch('connector.v1.resources.user.FbUser')
+    @patch('connector.v1.resources.user.Client')
+    @patch('connector.v1.resources.user.get_name_for_tenant')
+    def test_new_user_no_email(self, get_name_for_tenant_mock, FbClient_mock, FbUser_mock, OA_mock):
+        fb_user_mock = FbUser_mock.return_value
+        client_instance = FbClient_mock.return_value
+        get_name_for_tenant_mock.return_value = 'fake_client'
+        fb_user_mock.email = 'user@odin.com'
+        fb_user_mock.user_id = '3c9ed599-cd79-4222-beb0-be83f9dc8078'
+        client_instance.storage = {'limit': 100}
+        OA_mock.get_resources.return_value = [self.new_tenant]
+        OA_mock.get_resource.return_value = self.oa_user_no_email
+        res = self.client.post('/connector/v1/user', headers=self.headers,
+                               data=json.dumps(self.user_service))
+
+        FbUser_mock.assert_called()
+        fbuser_kwargs = FbUser_mock.call_args[1]
+        assert fbuser_kwargs.get('email') == self.oa_user_no_email['login']
+
         fb_user_mock.create.assert_called()
         assert res.status_code == 201
 
