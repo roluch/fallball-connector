@@ -1,3 +1,6 @@
+import random
+import string
+
 from collections import namedtuple
 
 from flask import Blueprint, g, request
@@ -34,11 +37,20 @@ def allow_public_endpoints_only():
         abort(401)
 
 
+def generate_reseller_name(length=4):
+    symbols = string.ascii_lowercase + string.digits
+    suffix = ''.join(random.choice(symbols) for _ in range(length))
+    reseller_name = '{} {}'.format(fake.bs(), suffix)
+
+    return urlify(reseller_name)
+
+
 def set_name_for_reseller(reseller_id):
     if not reseller_id:
         return None
     if g.endpoint == ApplicationList.__name__.lower():
-        return urlify(fake.bs())
+        return generate_reseller_name()
+
     return get_reseller_name(reseller_id)
 
 
