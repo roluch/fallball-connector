@@ -77,7 +77,7 @@ def log_request(request):
             "app": "fallball_connector",
             "method": request.method,
             "url": request.url,
-            "headers": dict(request.headers),
+            "headers": parse_headers(request.headers),
             "time": datetime.datetime.now().isoformat(' '),
             "data": data}
 
@@ -95,7 +95,7 @@ def log_response(response):
             "app": "fallball_connector",
             "status_code": response.status_code,
             "status": response.status,
-            "headers": dict(response.headers),
+            "headers": parse_headers(response.headers),
             "time": datetime.datetime.now().isoformat(' '),
             "data": data,
             "company": getattr(g, 'company_name', None)}
@@ -105,7 +105,7 @@ def log_outgoing_request(request):
     return {"app": "fallball_connector",
             "method": request.method,
             "url": request.url,
-            "headers": dict(request.headers),
+            "headers": parse_headers(request.headers),
             "time": datetime.datetime.now().isoformat(' '),
             "data": request.body}
 
@@ -117,7 +117,7 @@ def log_outgoing_response(response):
         data = response.content.decode()
     return {"app": "fallball_connector",
             "status": response.status_code,
-            "headers": dict(response.headers),
+            "headers": parse_headers(response.headers),
             "time": datetime.datetime.now().isoformat(' '),
             "data": data}
 
@@ -130,3 +130,9 @@ def escape_domain_name(name):
 
 def guid():
     return uuid.uuid4().hex
+
+
+def parse_headers(obj):
+    return {
+        k: v.decode() if isinstance(v, bytes) else v for k, v in dict(obj).items()
+    }
