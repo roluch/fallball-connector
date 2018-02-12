@@ -4,7 +4,7 @@ branches:
     - master
 python:
   - "2.7"
-  - "3.5"
+  - "3.6"
 services:
   - docker
 install:
@@ -18,10 +18,8 @@ script:
   - python setup.py nosetests
 after_success:
   - bash <(curl -s https://codecov.io/bash)
-  - VERSION=`cat VERSION`
-  - export REPO=ingrammicrocloud/fallball-connector
-  - docker build -t $REPO .
-  - docker tag $REPO $REPO:latest
-  - docker tag $REPO $REPO:$VERSION
-  - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-  - docker push $REPO
+deploy:
+  provider: script
+  on:
+    python: "3.6"
+  script: bash deploy-to-dockerhub.sh
