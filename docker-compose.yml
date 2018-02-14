@@ -1,13 +1,15 @@
-connector:
-  restart: always
-  build: .
-  ports:
-    - "5000:80"
-  entrypoint:
-    - python
-    - app.py
-  volumes:
-    - ./connector:/connector
-    - ./config.yml:/connector/config.yml
-  cpu_quota: 200000
-  mem_limit: 268435456
+version: '2.2'
+services:
+  connector:
+    restart: always
+    build: .
+    ports:
+      - "5000:80"
+    entrypoint:
+      - python
+      - app.py
+    volumes:
+      - ./connector:/connector
+      - ./config.yml:/connector/config.yml
+    cpus: 0.2
+    mem_limit: 256m
