@@ -9,3 +9,5 @@ connector:
   volumes:
     - ./connector:/connector
     - ./config.yml:/connector/config.yml
+  cpu_quota: 200000
+  mem_limit: 268435456
